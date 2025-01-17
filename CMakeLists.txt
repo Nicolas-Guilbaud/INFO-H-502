@@ -40,8 +40,16 @@ add_compile_definitions(PATH_TO_SHADERS="${CMAKE_CURRENT_SOURCE_DIR}/src/shaders
 
 # Compilation
 
-# TODO: replace with current src
-set(SOURCES "src/scene/main.cpp")
+# recursive search for cpp & header files
+file(GLOB_RECURSE CPP_FILES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.cpp")
+file(GLOB_RECURSE H_FILES RELATIVE ${CMAKE_SOURCE_DIR} "src/*.h")
 
-add_executable(${PROJECT_NAME}_runnable ${SOURCES})
+# Debug msg to see what files are linked in the executable
+message(
+    "Building project using:\n"
+    "- headers: ${H_FILES}\n"
+    "- code: ${CPP_FILES}"
+)
+
+add_executable(${PROJECT_NAME}_runnable ${CPP_FILES} ${H_FILES})
 target_link_libraries(${PROJECT_NAME}_runnable PUBLIC OpenGL::GL glfw glad)

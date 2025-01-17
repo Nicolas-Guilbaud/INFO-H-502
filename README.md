@@ -11,17 +11,17 @@ git clone --recursive https://github.com/Nicolas-Guilbaud/INFO-H-502.git
 
 # 1. TODO
 
-- [ ] Setup
+- [x] Setup
     - [x] create the project with the basic structure (CMAKE, etc)
-    - [ ] create a basic scene with a cube
+    - [x] create a basic scene with a cube
 - [ ] Physics
     - [ ] Mecanic system
     - [ ] Collision detection
     - [ ] Light
 - [ ] File loading
-    - [ ] Load a mesh
+    - [x] Load a mesh
     - [ ] Load a texture
-    - [ ] Load a shader
+    - [x] Load a shader
     - [ ] Load the entire scene
 - [ ] Interactions:
     - [ ] Launch the ball
