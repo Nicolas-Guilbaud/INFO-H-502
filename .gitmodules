@@ -7,3 +7,6 @@
 [submodule "3rdParty/stb"]
 	path = 3rdParty/stb
 	url = https://github.com/nothings/stb
+[submodule "3rdParty/bullet3"]
+	path = 3rdParty/bullet3
+	url = https://github.com/bulletphysics/bullet3.git
