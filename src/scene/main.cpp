@@ -16,6 +16,11 @@
 #include "../utils/object.h"
 
 
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+
+
+
 const int width = 500;
 const int height = 500;
 

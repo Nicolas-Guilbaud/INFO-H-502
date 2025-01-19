@@ -14,6 +14,11 @@
 #include <glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+
+
 struct Vertex{
 	glm::vec3 position;
 	glm::vec2 texture;
@@ -30,6 +35,11 @@ public:
 	GLuint VBO, VAO;
 
 	glm::mat4 model = glm::mat4(1.0);
+
+	glm::mat4 model = glm::mat4(1.0);
+	glm::mat4 inverseTranspose = model;
+
+	btConvexHullShape* hull = nullptr; // Convex hull for collision
 
 
 	Object(const char* path) {
@@ -111,8 +121,27 @@ public:
 
 		file.close();
 		numVertices = vertices.size();
+
+		setHull();
 	}
 
+	void setHull() {
+		if (hull) delete hull; // Clean up any existing hull
+
+		hull = new btConvexHullShape();
+		for (const auto& vertex : vertices) {
+			// Transform the vertex positions using the current model matrix
+			glm::vec4 transformedPos = model * glm::vec4(vertex.position, 1.0f);
+			hull->addPoint(btVector3(transformedPos.x, transformedPos.y, transformedPos.z), false);
+		}
+		hull->recalcLocalAabb(); // Recalculate the bounding box
+	}
+
+	void setModel(const glm::mat4& newModel) {
+		model = newModel;
+		inverseTranspose = glm::inverse(glm::transpose(model));
+		setHull();
+	}
 
 
 	void makeObject(Shader shader, bool texture = true) {

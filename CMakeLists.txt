@@ -40,7 +40,7 @@ include_directories(3rdParty/glad/include/
                     )
 
 link_libraries(
-    BulletDynamics BulletCollision LinearMath
+    ${BULLET_LIBRARIES}
 )
 
 # Defining usefull Macros for the project
