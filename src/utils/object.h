@@ -1,6 +1,6 @@
 #ifndef OBJECT_H
 #define OBJECT_H
-
+#define VTXMASS 1.0f
 #include<iostream>
 #include <fstream>
 #include <string>
@@ -26,21 +26,42 @@ struct Vertex{
 };
 
 class Object
-{
+{	
+private:
+	std::vector<Vertex> vertices;
+
+	glm::vec3 ctrOfMass = glm::vec3(0.0);
+
+	glm::mat4 model = glm::mat4(1.0);
+
+	glm::mat4 inverseTranspose = model;
+
+	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
+
+	btCollisionObject* object = new btCollisionObject(); // Collision object
+
+	void setCollisionInit() {
+		if (hull) delete hull; // Clean up any existing hull
+
+		hull = new btConvexHullShape();
+		for (const auto& vertex : vertices) {
+			// Transform the vertex positions using the current model matrix
+			glm::vec4 transformedPos = model * glm::vec4(vertex.position, 1.0f);
+			hull->addPoint(btVector3(transformedPos.x, transformedPos.y, transformedPos.z), false);
+		}
+		hull->recalcLocalAabb(); // Recalculate the bounding box
+		object->setCollisionShape(hull); // Recalculate the collision object
+		btTransform identityTransform;
+		identityTransform.setIdentity();
+		identityTransform.setOrigin(btVector3(ctrOfMass.x,ctrOfMass.y,ctrOfMass.z));
+		object->setWorldTransform(identityTransform);
+	}
+
 public:
 
-	std::vector<Vertex> vertices;
 	int numVertices;
 
 	GLuint VBO, VAO;
-
-	glm::mat4 model = glm::mat4(1.0);
-
-	glm::mat4 model = glm::mat4(1.0);
-	glm::mat4 inverseTranspose = model;
-
-	btConvexHullShape* hull = nullptr; // Convex hull for collision
-
 
 	Object(const char* path) {
 
@@ -70,8 +91,12 @@ public:
 				streamedLine >> word;
 				if(word == "v"){
 					float x,y,z;
+					float vmass = VTXMASS;
 					streamedLine >> x >> y >> z;
 					position.push_back(glm::vec3(x,y,z));
+					ctrOfMass = ctrOfMass + glm::vec3(x, y, z)*vmass;
+					//std::cout << "Next processed vertex " << x << " " << y << " " << z << "\n" ;
+					//std::cout << "Adjusted center of mass: " <<  ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << "\n";
 					//vertice
 				}
 
@@ -121,28 +146,32 @@ public:
 
 		file.close();
 		numVertices = vertices.size();
-
-		setHull();
-	}
-
-	void setHull() {
-		if (hull) delete hull; // Clean up any existing hull
-
-		hull = new btConvexHullShape();
-		for (const auto& vertex : vertices) {
-			// Transform the vertex positions using the current model matrix
-			glm::vec4 transformedPos = model * glm::vec4(vertex.position, 1.0f);
-			hull->addPoint(btVector3(transformedPos.x, transformedPos.y, transformedPos.z), false);
-		}
-		hull->recalcLocalAabb(); // Recalculate the bounding box
+		ctrOfMass = ctrOfMass / (numVertices*VTXMASS);
+		std::cout << "Object with center of mass " << ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << " " << "set.\n";
+		
+		setCollisionInit();
 	}
 
 	void setModel(const glm::mat4& newModel) {
 		model = newModel;
 		inverseTranspose = glm::inverse(glm::transpose(model));
-		setHull();
+		ctrOfMass = glm::vec3(model * glm::vec4(ctrOfMass, 1.0));
+		std::cout << "Updated center of mass " << ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << "\n";
+
+		setCollisionInit();
 	}
 
+	const glm::mat4& getModel() {
+		return model;
+	}
+
+	const glm::mat4& getInverseTranspose() {
+		return inverseTranspose;
+	}
+
+	const btCollisionObject* getCollisionObject() {
+		return object;
+	}
 
 	void makeObject(Shader shader, bool texture = true) {
 

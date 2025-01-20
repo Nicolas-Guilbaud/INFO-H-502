@@ -138,6 +138,9 @@ int main(int argc, char* argv[]){
 	Object cube(PATH_TO_MESHES "/cube.obj");
 	cube.makeObject(shader,false);
 
+	Object sphere(PATH_TO_MESHES "/sphere_smooth.obj");
+	sphere.makeObject(shader, false);
+
 	const glm::vec3 light_pos = glm::vec3(1.0, 2.0, 2.0);
 	
 	double prev = 0;
@@ -156,10 +159,23 @@ int main(int argc, char* argv[]){
 	};
 
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::translate(model, glm::vec3(0.0, 0.0, -2.0));
+	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
+	model = glm::translate(model, glm::vec3(10, 0.0, -2.0));
 	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
+	cube.setModel(model);
 
-	glm::mat4 inverseModel = glm::transpose( glm::inverse(model));
+	const btCollisionObject* cubeCObj = cube.getCollisionObject();
+	btTransform cubeWT = cubeCObj->getWorldTransform();
+	btMatrix3x3 cubeBasis = cubeWT.getBasis();
+	btVector3 basisColumns[3] = {cubeBasis.getColumn(0),cubeBasis.getColumn(1),cubeBasis.getColumn(2)};
+	btVector3 cubeOrigin = cubeWT.getOrigin();
+
+	/*
+	std::cout << "origin in the collision world: " << cubeOrigin.getX() <<" " << cubeOrigin.getY() << " " << cubeOrigin.getZ() <<"\n";
+	std::cout << "first column of the rotation basis in collision world: " << basisColumns[0].getX() << " " << basisColumns[0].getY() << " " << basisColumns[0].getZ() << "\n";
+	std::cout << "second column of the rotation basis in collision world: " << basisColumns[1].getX() << " " << basisColumns[1].getY() << " " << basisColumns[1].getZ() << "\n";
+	std::cout << "third column of the rotation basis in collision world: " << basisColumns[2].getX() << " " << basisColumns[2].getY() << " " << basisColumns[2].getZ() << "\n";
+	*/
 
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 perspective = camera.GetProjectionMatrix();
@@ -177,8 +193,8 @@ int main(int argc, char* argv[]){
 
 		shader.use();
 
-		shader.setMatrix4("M", model);
-		shader.setMatrix4("itM", inverseModel);
+		shader.setMatrix4("M", cube.getModel());
+		shader.setMatrix4("itM", cube.getInverseTranspose());
 		shader.setMatrix4("V", view);
 		shader.setMatrix4("P", perspective);
 		shader.setVector3f("u_view_pos", camera.Position);
@@ -186,6 +202,11 @@ int main(int argc, char* argv[]){
 
 		cube.draw();
 		//glDrawArrays(GL_TRIANGLES, 0, 12);
+
+		shader.setMatrix4("M", sphere.getModel());
+		shader.setMatrix4("itM", sphere.getInverseTranspose());
+
+		sphere.draw();
 
 		fps(now);
 		glfwSwapBuffers(window);
