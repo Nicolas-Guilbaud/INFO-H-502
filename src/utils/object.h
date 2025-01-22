@@ -1,12 +1,8 @@
-#ifndef OBJECT_H
-#define OBJECT_H
-#define VTXMASS 1.0f
 #include<iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
-
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,6 +14,9 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
+#ifndef OBJECT_H
+#define OBJECT_H
+#define VTXMASS 1.0f
 
 struct Vertex{
 	glm::vec3 position;
@@ -30,18 +29,18 @@ class Object
 private:
 	std::vector<Vertex> vertices;
 
-	glm::vec3 ctrOfMass = glm::vec3(0.0);
+	glm::vec3 ctr_of_mass = glm::vec3(0.0);
 
 	glm::mat4 model = glm::mat4(1.0);
 
-	glm::mat4 inverseTranspose = model;
+	glm::mat4 inverse_transpose = model;
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
 
 	btCollisionObject* object = new btCollisionObject(); // Collision object
 
 	void setCollisionInit() {
-		if (hull) delete hull; // Clean up any existing hull
+		if (hull) delete hull;
 
 		hull = new btConvexHullShape();
 		for (const auto& vertex : vertices) {
@@ -53,7 +52,7 @@ private:
 		object->setCollisionShape(hull); // Recalculate the collision object
 		btTransform identityTransform;
 		identityTransform.setIdentity();
-		identityTransform.setOrigin(btVector3(ctrOfMass.x,ctrOfMass.y,ctrOfMass.z));
+		identityTransform.setOrigin(btVector3(ctr_of_mass.x,ctr_of_mass.y,ctr_of_mass.z));
 		object->setWorldTransform(identityTransform);
 	}
 
@@ -94,9 +93,9 @@ public:
 					float vmass = VTXMASS;
 					streamedLine >> x >> y >> z;
 					position.push_back(glm::vec3(x,y,z));
-					ctrOfMass = ctrOfMass + glm::vec3(x, y, z)*vmass;
+					ctr_of_mass = ctr_of_mass + glm::vec3(x, y, z)*vmass;
 					//std::cout << "Next processed vertex " << x << " " << y << " " << z << "\n" ;
-					//std::cout << "Adjusted center of mass: " <<  ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << "\n";
+					//std::cout << "Adjusted center of mass: " <<  ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << "\n";
 					//vertice
 				}
 
@@ -146,17 +145,17 @@ public:
 
 		file.close();
 		numVertices = vertices.size();
-		ctrOfMass = ctrOfMass / (numVertices*VTXMASS);
-		std::cout << "Object with center of mass " << ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << " " << "set.\n";
+		ctr_of_mass = ctr_of_mass / (numVertices*VTXMASS);
+		std::cout << "Object with center of mass " << ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << " " << "set.\n";
 		
 		setCollisionInit();
 	}
 
 	void setModel(const glm::mat4& newModel) {
 		model = newModel;
-		inverseTranspose = glm::inverse(glm::transpose(model));
-		ctrOfMass = glm::vec3(model * glm::vec4(ctrOfMass, 1.0));
-		std::cout << "Updated center of mass " << ctrOfMass.x << " " << ctrOfMass.y << " " << ctrOfMass.z << "\n";
+		inverse_transpose = glm::inverse(glm::transpose(model));
+		ctr_of_mass = glm::vec3(model * glm::vec4(ctr_of_mass, 1.0));
+		//std::cout << "Updated center of mass " << ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << "\n";
 
 		setCollisionInit();
 	}
@@ -166,10 +165,10 @@ public:
 	}
 
 	const glm::mat4& getInverseTranspose() {
-		return inverseTranspose;
+		return inverse_transpose;
 	}
 
-	const btCollisionObject* getCollisionObject() {
+	btCollisionObject* getCollisionObject() {
 		return object;
 	}
 

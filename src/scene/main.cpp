@@ -1,13 +1,16 @@
+// standard C++ include files
 #include<iostream>
 
 //include glad before GLFW to avoid header conflict or define "#define GLFW_INCLUDE_NONE"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
+//user-defined header files
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -15,11 +18,7 @@
 #include "../utils/shader.h"
 #include "../utils/object.h"
 
-
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-
-
+#include "../collisions/MyContactResultCallback.cpp"
 
 const int width = 500;
 const int height = 500;
@@ -29,8 +28,9 @@ float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 
 Camera camera(glm::vec3(0.0, 0.0, 0.1));
-void processKeyInput(GLFWwindow* window);
+glm::vec3 processKeyInput(GLFWwindow* window);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
+void DetectCollisions(btCollisionWorld* cWorld);
 
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -132,14 +132,27 @@ int main(int argc, char* argv[]){
     glEnable(GL_DEPTH_TEST);
 
     //TODO: Shader
-
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 
+	//Creating the objects
 	Object cube(PATH_TO_MESHES "/cube.obj");
 	cube.makeObject(shader,false);
 
 	Object sphere(PATH_TO_MESHES "/sphere_smooth.obj");
 	sphere.makeObject(shader, false);
+
+	std::vector<Object> objects;
+	objects.push_back(cube);
+	objects.push_back(sphere);
+
+	//Initializing the collision world
+	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	btDbvtBroadphase* broadphasePairCache = new btDbvtBroadphase();
+	btCollisionWorld* collisionWorld = new btCollisionWorld(dispatcher, broadphasePairCache, collisionConfiguration);
+	for (auto& obj: objects) {
+		collisionWorld->addCollisionObject(obj.getCollisionObject());
+	}
 
 	const glm::vec3 light_pos = glm::vec3(1.0, 2.0, 2.0);
 	
@@ -160,7 +173,7 @@ int main(int argc, char* argv[]){
 
 	glm::mat4 model = glm::mat4(1.0);
 	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
-	model = glm::translate(model, glm::vec3(10, 0.0, -2.0));
+	model = glm::translate(model, glm::vec3(10, 0.0, 0.0));
 	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
 	cube.setModel(model);
 
@@ -183,7 +196,12 @@ int main(int argc, char* argv[]){
 	//Rendering
 
 	while (!glfwWindowShouldClose(window)) {
-		processKeyInput(window);
+		
+		glm::vec3 trans = processKeyInput(window);
+		cube.setModel(glm::translate(cube.getModel(), trans));
+		/*
+		cube.setModel(cube.getModel() + trans);
+		*/
 		view = camera.GetViewMatrix();
 		glfwPollEvents();
 		double now = glfwGetTime();
@@ -201,6 +219,7 @@ int main(int argc, char* argv[]){
 		shader.setVector3f("u_light_pos", light_pos);
 
 		cube.draw();
+		cube.setModel(glm::translate(cube.getModel(),glm::vec3(1.0,0.0,0.0)/60.0f));
 		//glDrawArrays(GL_TRIANGLES, 0, 12);
 
 		shader.setMatrix4("M", sphere.getModel());
@@ -210,6 +229,8 @@ int main(int argc, char* argv[]){
 
 		fps(now);
 		glfwSwapBuffers(window);
+
+		DetectCollisions(collisionWorld);
 	}
 
 	//clean up ressource
@@ -220,18 +241,18 @@ int main(int argc, char* argv[]){
 
 }
 
-void processKeyInput(GLFWwindow* window) {
+glm::vec3 processKeyInput(GLFWwindow* window) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
-    //Left & Right
+	//Left & Right
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(LEFT, 0.1);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(RIGHT, 0.1);
 
-    //Front & Back
+	//Front & Back
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(FORWARD, 0.1);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
@@ -239,25 +260,25 @@ void processKeyInput(GLFWwindow* window) {
 		camera.ProcessKeyboardMovement(BACKWARD, 0.1);
 	}
 
-    //Up & Down
-	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		camera.ProcessKeyboardMovement(UP,0.1);
-	
-	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		camera.ProcessKeyboardMovement(DOWN,0.1);
+	//Up & Down
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.ProcessKeyboardMovement(UP, 0.1);
 
-    //optional
-	// if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	// 	camera.ProcessKeyboardRotation(1, 0.0,1);
-	// if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	// 	camera.ProcessKeyboardRotation(-1, 0.0,1);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera.ProcessKeyboardMovement(DOWN, 0.1);
 
-	// if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	// 	camera.ProcessKeyboardRotation(0.0, 1.0, 1);
-	// if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	// 	camera.ProcessKeyboardRotation(0.0, -1.0, 1);
+	glm::vec3 trans = glm::vec3(0.0,0.0,0.0) / 30.0f;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	 	trans+=glm::vec3(1.0, 0.0, 0.0) / 30.0f;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		trans += glm::vec3(-1.0, 0.0, 0.0) / 30.0f;
 
+	 if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		 trans += glm::vec3(0.0, 1.0, 0.0) / 30.0f;
+	 if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		 trans += glm::vec3(0.0, -1.0, 0.0)/30.0f;
 
+	 return trans;
 }
 
 /* Motivated student can implement the rotation using the mouse
@@ -281,4 +302,23 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 	lastY = ypos;
 
 	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void DetectCollisions(btCollisionWorld* c_world) {
+	/*
+	c-world->performDiscreteCollisionDetection();
+	int numManifolds = c_world->getDispatcher()->getNumManifolds();
+	for (int i = 0; i < numManifolds; i++) {
+		btPersistentManifold* manifold = c_world->getDispatcher()->getManifoldByIndexInternal(i);
+		// Process each contact point in the manifold
+	}*/
+
+	btCollisionObjectArray c_obj_arr = c_world->getCollisionObjectArray();
+	MyContactResultCallback resultCallback;
+	int arr_size = c_obj_arr.size();
+	for (int i = 0; i < arr_size-1; i++) {
+		for (int j = i + 1; j < arr_size; j++) {
+			c_world->contactPairTest(c_obj_arr[i],c_obj_arr[j], resultCallback);
+		}
+	}
 }
