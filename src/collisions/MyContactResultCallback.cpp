@@ -12,8 +12,15 @@ public:
         const btCollisionObjectWrapper* colObj1Wrap,
         int partId1, int index1) override {
         // Process collision results here
-        std::cout << "Collision detected!" << std::endl;
-        std::cout.flush();
+      
+        // Get collision point in world coordinates
+        btVector3 collisionPoint = cp.getPositionWorldOnA();  // or cp.getPositionWorldOnB()
+        
+        // Print collision details
+        std::cout << "\rCollision detected at position (" << collisionPoint.x() << ", "
+            << collisionPoint.y() << ", "
+            << collisionPoint.z() << ")" << std::flush;
+        
         return 0; // Return the applied impulse or any custom value if needed
     }
 };

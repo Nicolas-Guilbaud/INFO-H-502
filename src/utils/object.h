@@ -52,7 +52,7 @@ private:
 		object->setCollisionShape(hull); // Recalculate the collision object
 		btTransform identityTransform;
 		identityTransform.setIdentity();
-		identityTransform.setOrigin(btVector3(ctr_of_mass.x,ctr_of_mass.y,ctr_of_mass.z));
+		identityTransform.setOrigin(btVector3( 0.0, 0.0, 0.0));
 		object->setWorldTransform(identityTransform);
 	}
 

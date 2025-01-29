@@ -13,11 +13,9 @@
 //user-defined header files
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
 #include "../utils/camera.h"
 #include "../utils/shader.h"
 #include "../utils/object.h"
-
 #include "../collisions/MyContactResultCallback.cpp"
 
 const int width = 500;
@@ -137,13 +135,23 @@ int main(int argc, char* argv[]){
 	//Creating the objects
 	Object cube(PATH_TO_MESHES "/cube.obj");
 	cube.makeObject(shader,false);
+	glm::mat4 model = glm::mat4(1.0);
+	model = glm::translate(model, glm::vec3(10, 0.0, 0.0));
+	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
+	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
+	cube.setModel(model);
 
 	Object sphere(PATH_TO_MESHES "/sphere_smooth.obj");
 	sphere.makeObject(shader, false);
 
+	Object sphere_coarse(PATH_TO_MESHES "/sphere_coarse.obj");
+	sphere_coarse.makeObject(shader, false);
+	sphere_coarse.setModel(glm::translate(glm::mat4(1.0),glm::vec3(5.0,0.0,0.0)));
+
 	std::vector<Object> objects;
 	objects.push_back(cube);
 	objects.push_back(sphere);
+	objects.push_back(sphere_coarse);
 
 	//Initializing the collision world
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -171,12 +179,6 @@ int main(int argc, char* argv[]){
 		}
 	};
 
-	glm::mat4 model = glm::mat4(1.0);
-	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
-	model = glm::translate(model, glm::vec3(10, 0.0, 0.0));
-	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
-	cube.setModel(model);
-
 	const btCollisionObject* cubeCObj = cube.getCollisionObject();
 	btTransform cubeWT = cubeCObj->getWorldTransform();
 	btMatrix3x3 cubeBasis = cubeWT.getBasis();
@@ -197,11 +199,6 @@ int main(int argc, char* argv[]){
 
 	while (!glfwWindowShouldClose(window)) {
 		
-		glm::vec3 trans = processKeyInput(window);
-		cube.setModel(glm::translate(cube.getModel(), trans));
-		/*
-		cube.setModel(cube.getModel() + trans);
-		*/
 		view = camera.GetViewMatrix();
 		glfwPollEvents();
 		double now = glfwGetTime();
@@ -211,23 +208,25 @@ int main(int argc, char* argv[]){
 
 		shader.use();
 
-		shader.setMatrix4("M", cube.getModel());
-		shader.setMatrix4("itM", cube.getInverseTranspose());
 		shader.setMatrix4("V", view);
 		shader.setMatrix4("P", perspective);
 		shader.setVector3f("u_view_pos", camera.Position);
 		shader.setVector3f("u_light_pos", light_pos);
 
-		cube.draw();
-		cube.setModel(glm::translate(cube.getModel(),glm::vec3(1.0,0.0,0.0)/60.0f));
 		//glDrawArrays(GL_TRIANGLES, 0, 12);
 
-		shader.setMatrix4("M", sphere.getModel());
-		shader.setMatrix4("itM", sphere.getInverseTranspose());
+		glm::vec3 trans = processKeyInput(window);
+		objects[0].setModel(glm::translate(objects[0].getModel(), trans));
 
-		sphere.draw();
+		// draw objects
+		int arr_size = objects.size();
+		for (int i = 0; i < arr_size; i++) {
+			shader.setMatrix4("M", objects[i].getModel());
+			shader.setMatrix4("itM", objects[i].getInverseTranspose());
+			objects[i].draw();
+		}
 
-		fps(now);
+		//fps(now);
 		glfwSwapBuffers(window);
 
 		DetectCollisions(collisionWorld);
@@ -267,16 +266,16 @@ glm::vec3 processKeyInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(DOWN, 0.1);
 
-	glm::vec3 trans = glm::vec3(0.0,0.0,0.0) / 30.0f;
+	glm::vec3 trans = glm::vec3(0.0, 0.0, 0.0);
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	 	trans+=glm::vec3(1.0, 0.0, 0.0) / 30.0f;
+	 	trans+=glm::vec3(1.0, 0.0, 0.0) / 10.0f;
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		trans += glm::vec3(-1.0, 0.0, 0.0) / 30.0f;
+		trans += glm::vec3(-1.0, 0.0, 0.0) / 10.0f;
 
 	 if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		 trans += glm::vec3(0.0, 1.0, 0.0) / 30.0f;
+		 trans += glm::vec3(0.0, 0.0, 1.0) / 10.0f;
 	 if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		 trans += glm::vec3(0.0, -1.0, 0.0)/30.0f;
+		 trans += glm::vec3(0.0, 0.0, -1.0)/10.0f;
 
 	 return trans;
 }
