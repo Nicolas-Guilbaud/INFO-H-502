@@ -30,14 +30,16 @@ endif()
 find_package(Bullet QUIET)
 if(NOT BULLET_FOUND)
     add_subdirectory(3rdParty/bullet3/ EXCLUDE_FROM_ALL)
+    #link_libraries(BulletDynamics BulletCollision LinearMath Bullet3Common)
+    set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath Bullet3Common)
 endif()
 
 # include libs to project
 include_directories(3rdParty/glad/include/
                     3rdParty/glm/
                     3rdParty/stb/
-                    3rdParty/bullet3/src
-                    )
+                    3rdParty/bullet3/src/
+)
 
 link_libraries(
     ${BULLET_LIBRARIES}

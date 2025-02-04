@@ -94,29 +94,26 @@ public:
 					streamedLine >> x >> y >> z;
 					position.push_back(glm::vec3(x,y,z));
 					ctr_of_mass = ctr_of_mass + glm::vec3(x, y, z)*vmass;
-					//std::cout << "Next processed vertex " << x << " " << y << " " << z << "\n" ;
-					//std::cout << "Adjusted center of mass: " <<  ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << "\n";
-					//vertice
 				}
 
-				if(word == "vt"){
+				else if(word == "vt"){
 					//texture
 					float x,y;
 					streamedLine >> x >> y;
 					texture.push_back(glm::vec2(x,y));
 				}
 
-				if(word == "vn"){
+				else if(word == "vn"){
 					//normal
 					float x,y,z;
 					streamedLine >> x >> y >> z;
 					normal.push_back(glm::vec3(x,y,z));
 				}
 
-				if(word == "f"){
+				else if(word == "f"){
 					//face
 					// v/vt/vn
-					while(!streamedLine.eof()){
+					for(int i = 0; i < 3; i++){
 
 						std::string p,t,n;
 
