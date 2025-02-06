@@ -17,6 +17,7 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 #define VTXMASS 1.0f
+#define NDEBUG
 
 struct Vertex{
 	glm::vec3 position;
@@ -78,7 +79,6 @@ public:
 		// vt = vertices for the texture
 		// vn = normal vertices
 		// f = face -> v/vt/vn
-
 		std::ifstream file;
 		file.exceptions(std::ifstream::badbit);
 		try{
@@ -113,11 +113,13 @@ public:
 				else if(word == "f"){
 					//face
 					// v/vt/vn
-					for(int i = 0; i < 3; i++){
+					while(true){
 
 						std::string p,t,n;
 
 						streamedLine >> word;
+
+						if(streamedLine.fail()) break;
 
 						p = word.substr(0,word.find("/"));
 						word.erase(0,word.find("/")+1);
@@ -139,6 +141,15 @@ public:
 		}catch(std::ifstream::failure e){
 			std::cout << "ERROR READING '" << path << "' OBJ FILE:\n" << e.what() << std::endl;
 		}
+
+		#ifdef NDEBUG
+
+		std::cout << "Loaded " << vertices.size() << " vertices" << std::endl
+			<< "- pos: " << position.size() << std::endl
+			<< "- texture: " << texture.size() << std::endl
+			<< "- normals: " << normal.size() << std::endl;
+
+		#endif
 
 		file.close();
 		numVertices = vertices.size();

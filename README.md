@@ -8,3 +8,7 @@ This file will be updated as the project progresses.
 ```bash
 git clone --recursive https://github.com/Nicolas-Guilbaud/INFO-H-502.git
 ```
+
+# Sources
+
+Object files: https://free3d.com/fr/3d-model/-bowling-ball-v1--953922.html

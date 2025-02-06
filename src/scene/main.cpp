@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
 	glfwMakeContextCurrent(window);
 	/* Motivated student can implement the rotation using the mouse */
 	glfwSetCursorPosCallback(window, mouseCallback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); //GLFW_CURSOR_DISABLED
 	//load openGL function
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -141,12 +141,21 @@ int main(int argc, char* argv[]){
 	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
 	cube.setModel(model);
 
-	Object sphere(PATH_TO_MESHES "/sphere_smooth.obj");
+	Object sphere(PATH_TO_MESHES "/bowling_ball.obj");
 	sphere.makeObject(shader, false);
 
-	Object sphere_coarse(PATH_TO_MESHES "/sphere_coarse.obj");
+	model = glm::mat4(1.0);
+	model = glm::scale(model,glm::vec3(0.1));
+	sphere.setModel(model);
+
+	Object sphere_coarse(PATH_TO_MESHES "/BowlingPins.obj");
 	sphere_coarse.makeObject(shader, false);
-	sphere_coarse.setModel(glm::translate(glm::mat4(1.0),glm::vec3(5.0,0.0,0.0)));
+
+	model = glm::mat4(1.0);
+	model = glm::translate(model,glm::vec3(5.0,0.0,0.0));
+	model = glm::scale(model, glm::vec3(0.1));
+
+	sphere_coarse.setModel(model);
 
 	std::vector<Object> objects;
 	objects.push_back(cube);
