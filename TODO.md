@@ -24,7 +24,7 @@
 ## Objectifs
 
 - Loup:
-    - [ ] se pencher sur le dynamicWorld -> transfert auto des momentums
+    - [x] se pencher sur le dynamicWorld -> transfert auto des momentums
 - Nicolas:
     - [ ] quille et boule de bowling
       - [ ] meshes
@@ -32,3 +32,24 @@
     - [x] débugger l'erreur de compilation
 
 ## Résumé
+
+- Loup: 
+    - transition enclenchée du btCollisionWorld vers le btDynamicsWorld et rétrocompatibilité avec scène de base
+    - documentation concernant le rendu OpenGL d'une scène dynamique
+- Nicolas:
+    - résolution de problèmes de parser (segmentation faults)
+    - obtention des meshes, erreurs rencontrées et commit dans une nouvelle branche (textures)
+ 
+  # Réunion 13/02/2025
+
+  ## Objectifs
+  - Loup:
+    - familiarisation avec les fonctionnalités git (fetch, checkout, merge) via la page https://learngitbranching.js.org/?locale=en_US
+    - prise en compte de l'influence de la concavité des quilles dans la configuration de détection des collisions
+    - implémentation d'une scène dynamique
+
+ - Nicolas:
+   - reformattage des fichiers .obj: corriger les faces à 4 sommets de la boule de bowling, scinder le triplet de quilles
+   - alternativement prendre en compte les faces à 4 sommets dans le parser de fichiers .obj
+
+    ## Résumé
