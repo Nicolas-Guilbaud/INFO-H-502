@@ -37,23 +37,53 @@ private:
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
 
-	btCollisionObject* object = new btCollisionObject(); // Collision object
+	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 
-	void setCollisionInit() {
+	void setHullInit() {
 		if (hull) delete hull;
 
 		hull = new btConvexHullShape();
 		for (const auto& vertex : vertices) {
 			// Transform the vertex positions using the current model matrix
-			glm::vec4 transformedPos = model * glm::vec4(vertex.position, 1.0f);
-			hull->addPoint(btVector3(transformedPos.x, transformedPos.y, transformedPos.z), false);
+			hull->addPoint(btVector3(vertex.position.x, vertex.position.y, vertex.position.z), false);
 		}
 		hull->recalcLocalAabb(); // Recalculate the bounding box
-		object->setCollisionShape(hull); // Recalculate the collision object
-		btTransform identityTransform;
-		identityTransform.setIdentity();
-		identityTransform.setOrigin(btVector3( 0.0, 0.0, 0.0));
-		object->setWorldTransform(identityTransform);
+	}
+
+	void scaleHull(glm::vec3 scaling) {
+		if (!hull) setHullInit();
+
+		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
+	}
+
+	void setRigidBodyInit() {
+		if (rigidBody) delete rigidBody;
+		if (!hull) setHullInit();
+
+		// Set up the rigid body
+		btScalar mass = (btScalar)1.0;
+		btVector3 inertia(0, 0, 0);
+		hull->calculateLocalInertia(mass, inertia); // Computes inertia for dynamic objects
+		btMotionState* motionState = new btDefaultMotionState();
+		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
+		rigidBody = new btRigidBody(*rbInfo);
+
+		setRigidBody();
+	}
+
+	void setRigidBody() { // apply transform corresponding to model
+		if (!hull) setHullInit();
+		if (!rigidBody) setRigidBodyInit();
+
+		// Extract translation (last column of the matrix)
+		btVector3 position(model[3][0], model[3][1], model[3][2]);
+
+		// Extract rotation (upper-left 3x3 part)
+		glm::mat3 rotationMatrix(model);
+		glm::quat glmQuat = glm::quat_cast(rotationMatrix);
+		btQuaternion rotation(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
+
+		rigidBody->proceedToTransform(btTransform(rotation, position));
 	}
 
 public:
@@ -145,7 +175,8 @@ public:
 		ctr_of_mass = ctr_of_mass / (numVertices*VTXMASS);
 		std::cout << "Object with center of mass " << ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << " " << "set.\n";
 		
-		setCollisionInit();
+		setHullInit();
+		setRigidBodyInit();
 	}
 
 	void setModel(const glm::mat4& newModel) {
@@ -154,8 +185,15 @@ public:
 		ctr_of_mass = glm::vec3(model * glm::vec4(ctr_of_mass, 1.0));
 		//std::cout << "Updated center of mass " << ctr_of_mass.x << " " << ctr_of_mass.y << " " << ctr_of_mass.z << "\n";
 
-		setCollisionInit();
+		glm::vec3 scaling = glm::vec3(glm::length(glm::vec3(model[0])),
+			glm::length(glm::vec3(model[1])),
+			glm::length(glm::vec3(model[2])));
+
+		scaleHull(scaling);
+
+		setRigidBody();
 	}
+
 
 	const glm::mat4& getModel() {
 		return model;
@@ -165,8 +203,8 @@ public:
 		return inverse_transpose;
 	}
 
-	btCollisionObject* getCollisionObject() {
-		return object;
+	btRigidBody* getRigidBody() {
+		return rigidBody;
 	}
 
 	void makeObject(Shader shader, bool texture = true) {
