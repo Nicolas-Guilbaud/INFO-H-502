@@ -5,8 +5,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
@@ -28,7 +28,8 @@ float lastY = height / 2.0f;
 Camera camera(glm::vec3(0.0, 0.0, 0.1));
 glm::vec3 processKeyInput(GLFWwindow* window);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
-void DetectCollisions(btCollisionWorld* cWorld);
+void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
+void addGround(btDynamicsWorld* d_world);
 
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -134,42 +135,46 @@ int main(int argc, char* argv[]){
 
 	//Creating the objects
 	Object cube(PATH_TO_MESHES "/cube.obj");
-	cube.makeObject(shader,false);
+	cube.makeObject(shader, false);
 	glm::mat4 model = glm::mat4(1.0);
 	model = glm::translate(model, glm::vec3(10, 0.0, 0.0));
 	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
-	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
-	cube.setModel(model);
+	model = glm::scale(model, glm::vec3(1, 0.5, 0.5));
+	cube.setRigidBody(model);
 
 	Object sphere(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
 	sphere.makeObject(shader, false);
+	sphere.setVelocity(glm::vec3(10.0,0.0,0.0));
 
 	model = glm::mat4(1.0);
 	model = glm::scale(model,glm::vec3(0.1));
 	sphere.setModel(model);
 
 	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
+
 	sphere_coarse.makeObject(shader, false);
-
-	model = glm::mat4(1.0);
-	model = glm::translate(model,glm::vec3(5.0,0.0,0.0));
-	model = glm::scale(model, glm::vec3(0.1));
-
-	sphere_coarse.setModel(model);
+	sphere_coarse.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0),glm::vec3(5.0,0.0,0.0)),glm::vec3(1.5,1.5,1.5)));
 
 	std::vector<Object> objects;
 	objects.push_back(cube);
 	objects.push_back(sphere);
 	objects.push_back(sphere_coarse);
 
-	//Initializing the collision world
-	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-	btDbvtBroadphase* broadphasePairCache = new btDbvtBroadphase();
-	btCollisionWorld* collisionWorld = new btCollisionWorld(dispatcher, broadphasePairCache, collisionConfiguration);
+	//Initializing the dynamic collision world
+	btDefaultCollisionConfiguration* collisionConfig = new btDefaultCollisionConfiguration();
+	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfig);
+	btDbvtBroadphase* broadphase = new btDbvtBroadphase();
+	int numSolvers = 1;
+	btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver();
+	btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
+	dynamicsWorld->setGravity(btVector3(0.0,0.0,0.0));
+	//dynamicsWorld->setGravity(btVector3(0, -9.81, 0)); // Set gravity
+
 	for (auto& obj: objects) {
-		collisionWorld->addCollisionObject(obj.getCollisionObject());
+		dynamicsWorld->addRigidBody(obj.getRigidBody());
 	}
+
+	//addGround( dynamicsWorld);
 
 	const glm::vec3 light_pos = glm::vec3(1.0, 2.0, 2.0);
 	
@@ -187,19 +192,6 @@ int main(int argc, char* argv[]){
 			std::cout.flush();
 		}
 	};
-
-	const btCollisionObject* cubeCObj = cube.getCollisionObject();
-	btTransform cubeWT = cubeCObj->getWorldTransform();
-	btMatrix3x3 cubeBasis = cubeWT.getBasis();
-	btVector3 basisColumns[3] = {cubeBasis.getColumn(0),cubeBasis.getColumn(1),cubeBasis.getColumn(2)};
-	btVector3 cubeOrigin = cubeWT.getOrigin();
-
-	/*
-	std::cout << "origin in the collision world: " << cubeOrigin.getX() <<" " << cubeOrigin.getY() << " " << cubeOrigin.getZ() <<"\n";
-	std::cout << "first column of the rotation basis in collision world: " << basisColumns[0].getX() << " " << basisColumns[0].getY() << " " << basisColumns[0].getZ() << "\n";
-	std::cout << "second column of the rotation basis in collision world: " << basisColumns[1].getX() << " " << basisColumns[1].getY() << " " << basisColumns[1].getZ() << "\n";
-	std::cout << "third column of the rotation basis in collision world: " << basisColumns[2].getX() << " " << basisColumns[2].getY() << " " << basisColumns[2].getZ() << "\n";
-	*/
 
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 perspective = camera.GetProjectionMatrix();
@@ -230,6 +222,7 @@ int main(int argc, char* argv[]){
 		// draw objects
 		int arr_size = objects.size();
 		for (int i = 0; i < arr_size; i++) {
+			objects[i].nextFrame();
 			shader.setMatrix4("M", objects[i].getModel());
 			shader.setMatrix4("itM", objects[i].getInverseTranspose());
 			objects[i].draw();
@@ -238,7 +231,12 @@ int main(int argc, char* argv[]){
 		//fps(now);
 		glfwSwapBuffers(window);
 
-		DetectCollisions(collisionWorld);
+		// Step simulation
+		float timeStep = 1.0f / 60.0f; // 60 FPS
+		int maxSubSteps = 10; // More substeps = better physics accuracy
+		dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
+
+		DetectCollisions(dynamicsWorld);
 	}
 
 	//clean up ressource
@@ -312,7 +310,7 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void DetectCollisions(btCollisionWorld* c_world) {
+void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
 	/*
 	c-world->performDiscreteCollisionDetection();
 	int numManifolds = c_world->getDispatcher()->getNumManifolds();
@@ -321,12 +319,32 @@ void DetectCollisions(btCollisionWorld* c_world) {
 		// Process each contact point in the manifold
 	}*/
 
-	btCollisionObjectArray c_obj_arr = c_world->getCollisionObjectArray();
+	btCollisionObjectArray c_obj_arr = d_world->getCollisionObjectArray();
 	MyContactResultCallback resultCallback;
 	int arr_size = c_obj_arr.size();
 	for (int i = 0; i < arr_size-1; i++) {
 		for (int j = i + 1; j < arr_size; j++) {
-			c_world->contactPairTest(c_obj_arr[i],c_obj_arr[j], resultCallback);
+			d_world->contactPairTest(c_obj_arr[i],c_obj_arr[j], resultCallback);
 		}
 	}
+}
+
+void addGround(btDynamicsWorld* d_world) {
+	// Create a box shape for the ground (size 500x1x500)
+	btCollisionShape* groundShape = new btBoxShape(btVector3(500, 1, 500));
+
+	// Set up transformation (position it at y = -1 to align top at y = 0)
+	btTransform groundTransform;
+	groundTransform.setIdentity();
+	groundTransform.setOrigin(btVector3(0, -1, 0));
+
+	// Create a motion state
+	btDefaultMotionState* groundMotionState = new btDefaultMotionState(groundTransform);
+
+	// Set mass to 0 (static object)
+	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
+	btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+
+	// Add to the dynamics world
+	d_world->addRigidBody(groundRigidBody);
 }
