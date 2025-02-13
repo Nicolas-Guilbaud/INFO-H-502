@@ -141,14 +141,14 @@ int main(int argc, char* argv[]){
 	model = glm::scale(model, glm::vec3(0.5, 0.5, 1.0));
 	cube.setModel(model);
 
-	Object sphere(PATH_TO_MESHES "/bowling_ball.obj");
+	Object sphere(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
 	sphere.makeObject(shader, false);
 
 	model = glm::mat4(1.0);
 	model = glm::scale(model,glm::vec3(0.1));
 	sphere.setModel(model);
 
-	Object sphere_coarse(PATH_TO_MESHES "/BowlingPins.obj");
+	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
 	sphere_coarse.makeObject(shader, false);
 
 	model = glm::mat4(1.0);

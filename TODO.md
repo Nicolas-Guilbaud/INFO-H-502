@@ -44,12 +44,12 @@
 
 ## Objectifs
 - Loup:
-   - familiarisation avec les fonctionnalités git (fetch, checkout, merge) via la page https://learngitbranching.js.org/?locale=en_US
-   - prise en compte de l'influence de la concavité des quilles dans la configuration de détection des collision
-   -  implémentation d'une scène dynamique
+   - [ ] familiarisation avec les fonctionnalités git (fetch, checkout, merge) via la page https://learngitbranching.js.org/?locale=en_US
+   - [ ] prise en compte de l'influence de la concavité des quilles dans la configuration de détection des collision
+   - [ ] implémentation d'une scène dynamique
 
 - Nicolas:
-   - reformattage des fichiers .obj: corriger les faces à 4 sommets de la boule de bowling, scinder le triplet de quilles
-   - alternativement prendre en compte les faces à 4 sommets dans le parser de fichiers .obj
+   - [x] reformattage des fichiers .obj: corriger les faces à 4 sommets de la boule de bowling, scinder le triplet de quilles
+   - [ ] alternativement prendre en compte les faces à 4 sommets dans le parser de fichiers .obj
 
 ## Résumé
