@@ -6,7 +6,7 @@
     - [x] create a basic scene with a cube
 - [ ] Physics
     - [ ] Mecanic system
-    - [ ] Collision detection
+    - [x] Collision detection
     - [ ] Light
 - [ ] File loading
     - [x] Load a mesh
@@ -51,5 +51,45 @@
 - Nicolas:
    - reformattage des fichiers .obj: corriger les faces à 4 sommets de la boule de bowling, scinder le triplet de quilles
    - alternativement prendre en compte les faces à 4 sommets dans le parser de fichiers .obj
+
+## Résumé
+
+### Nicolas 
+
+Le mesh des quilles et de la boule de bowling a été triangularisé sous blender.
+
+Début des textures mais ça ne fonctionne pas
+
+Il faudrait nettoyer le code et l'architecture.  
+-> peut-être faire un diagrame UML.
+
+### Loup:
+
+Scène dynamique terminée.
+
+Tuto git réalisé
+
+Objets concaves: séparer en objets convexes
+-> risque de problème avec les textures  
+-> attendre d'avoir les textures
+
+Avoir 1 classe mère Object et 2 classes filles pour distinguer les objets concaves et convexes
+
+Risque sur les prochaines tâches: l'adhérence au sol
+
+# Réunion 20/02/2025
+
+## Objectifs
+
+- [ ] Se procurer le chapitre 9
+
+- Loup:
+  - [ ] setup la piste avec les quilles
+    - [ ] avoir un sol
+    - [ ] avoir des quilles en triangle
+    - [ ] faire rouler boule de bowling vers les quilles
+- Nicolas:
+  - [ ] textures sur les meshes
+  - [ ] cubemap
 
 ## Résumé
