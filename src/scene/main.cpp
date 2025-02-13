@@ -11,12 +11,11 @@
 #include <btBulletDynamicsCommon.h>
 
 //user-defined header files
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #include "../utils/camera.h"
 #include "../utils/shader.h"
 #include "../utils/object.h"
 #include "../collisions/MyContactResultCallback.cpp"
+#include "../utils/Texture.h"
 
 const int width = 500;
 const int height = 500;
@@ -149,7 +148,9 @@ int main(int argc, char* argv[]){
 	sphere.setModel(model);
 
 	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
-	sphere_coarse.makeObject(shader, false);
+	sphere_coarse.makeObject(shader, true);
+	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
+	sphere_coarse.changeTexture(pinTex);
 
 	model = glm::mat4(1.0);
 	model = glm::translate(model,glm::vec3(5.0,0.0,0.0));

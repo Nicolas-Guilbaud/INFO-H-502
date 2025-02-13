@@ -5,6 +5,7 @@ in vec3 normal;
 //What do you need to send to the fragment shader ?
 out vec3 v_normal;
 out vec3 v_frag_coords;
+out vec2 tex_coord;
 
 uniform mat4 M; 
 uniform mat4 itM; 
@@ -17,4 +18,5 @@ void main(){
     gl_Position = P*V*frag_coord; 
     v_normal = vec3(itM * vec4(normal, 1.0)); 
     v_frag_coords = frag_coord.xyz;
+    tex_coord = tex_coords;
 }

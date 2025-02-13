@@ -5,9 +5,12 @@ precision mediump float;
 //What do you need to receive from the vertex shader ?
 in vec3 v_normal;
 in vec3 v_frag_coords;
+in vec2 tex_coord;
 
 uniform vec3 u_light_pos; 
 uniform vec3 u_view_pos; 
+uniform sampler2D img;
+
 float shininess = 32.0;
 float spec_strength = 0.8;
 //Which part do you need to compute here ?
@@ -21,5 +24,6 @@ void main() {
     float cosTheta = dot(R , V); 
     float spec = pow(max(cosTheta,0.0), shininess); 
     float specular = spec_strength * spec;
-    FragColor = vec4(vec3(specular), 1.0); 
+    FragColor = texture(img,tex_coord);
+    // FragColor = vec4(vec3(specular), 1.0) * texture(img,tex_coords); 
 }

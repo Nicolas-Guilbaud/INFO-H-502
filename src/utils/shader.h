@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SHADER_H
 #define SHADER_H
 
@@ -79,6 +80,10 @@ public:
     }
     void setMatrix4(const GLchar* name, const glm::mat4& matrix) {
         glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, glm::value_ptr(matrix));
+    }
+
+    void setTexture(const char* name, const GLuint texture, GLuint unit){
+        glUniform1i(glGetUniformLocation(ID,name),unit);
     }
 
 private:

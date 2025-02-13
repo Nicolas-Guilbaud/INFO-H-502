@@ -1,3 +1,5 @@
+#pragma once
+
 #include<iostream>
 #include <fstream>
 #include <string>
@@ -10,6 +12,7 @@
 #include <glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 
+#include "shader.h"
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -28,12 +31,11 @@ struct Vertex{
 class Object
 {	
 private:
+	bool textureFlag;
 	std::vector<Vertex> vertices;
 
 	glm::vec3 ctr_of_mass = glm::vec3(0.0);
-
 	glm::mat4 model = glm::mat4(1.0);
-
 	glm::mat4 inverse_transpose = model;
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
@@ -61,7 +63,7 @@ public:
 
 	int numVertices;
 
-	GLuint VBO, VAO;
+	GLuint VBO, VAO, texture;
 
 	Object(const char* path) {
 
@@ -73,7 +75,7 @@ public:
 
 		std::string name;
 		std::vector<glm::vec3> position, normal;
-		std::vector<glm::vec2> texture;
+		std::vector<glm::vec2> textureCoord;
 
 		// v = vertices
 		// vt = vertices for the texture
@@ -100,7 +102,7 @@ public:
 					//texture
 					float x,y;
 					streamedLine >> x >> y;
-					texture.push_back(glm::vec2(x,y));
+					textureCoord.push_back(glm::vec2(x,y));
 				}
 
 				else if(word == "vn"){
@@ -132,7 +134,7 @@ public:
 						Vertex v;
 						v.position = position.at(std::stof(p)-1);
 						v.normal = normal.at(std::stof(n)-1);
-						v.texture = texture.at(std::stof(t)-1);
+						v.texture = textureCoord.at(std::stof(t)-1);
 
 						vertices.push_back(v);
 					}
@@ -146,7 +148,7 @@ public:
 
 		std::cout << "Loaded " << vertices.size() << " vertices" << std::endl
 			<< "- pos: " << position.size() << std::endl
-			<< "- texture: " << texture.size() << std::endl
+			<< "- texture: " << textureCoord.size() << std::endl
 			<< "- normals: " << normal.size() << std::endl;
 
 		#endif
@@ -180,7 +182,7 @@ public:
 		return object;
 	}
 
-	void makeObject(Shader shader, bool texture = true) {
+	void makeObject(Shader shader, bool useTexture = true) {
 
 		//Put your data into your VBO
 		float* data = new float[8*numVertices];
@@ -216,7 +218,7 @@ public:
 		glVertexAttribPointer(att_pos, 3, GL_FLOAT, false, 8 * sizeof(float), (void*)0);
 
 		//texture
-		if(texture){
+		if(useTexture){
 			auto att_texture = glGetAttribLocation(shader.ID, "tex_coord");
 			glEnableVertexAttribArray(att_texture);
 			glVertexAttribPointer(att_texture, 2, GL_FLOAT, false, 8 * sizeof(float), (void*) (sizeof(float)*3));
@@ -233,9 +235,22 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 		delete[] data;
+		this->textureFlag = useTexture;
+	}
+
+	void changeTexture(GLuint texture){
+		if(!textureFlag) 
+			throw std::runtime_error("Texture is not allowed on this mesh !");
+		
+		this->texture = texture;
 	}
 
 	void draw() {
+
+		if(textureFlag){
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture);
+		}
 
 		//bind your vertex arrays and call glDrawArrays
 		glBindVertexArray(this->VAO);
