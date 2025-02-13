@@ -74,6 +74,11 @@ private:
 		setRigidBody(glm::mat4(1.0)); // setting the rigid body at the origin as default 
 	}
 
+	void setModel(const glm::mat4& newModel) {
+		model = newModel;
+		inverse_transpose = glm::inverse(glm::transpose(model));
+	}
+
 public:
 
 	int numVertices;
@@ -200,11 +205,6 @@ public:
 	void setScaling(glm::vec3 s) {
 		scaling = s;
 		scaleHull();
-	}
-
-	void setModel(const glm::mat4& newModel) {
-		model = newModel;
-		inverse_transpose = glm::inverse(glm::transpose(model));
 	}
 
 	void setVelocity(glm::vec3 V) {

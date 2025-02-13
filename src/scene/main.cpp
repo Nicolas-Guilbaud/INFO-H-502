@@ -26,7 +26,7 @@ float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 
 Camera camera(glm::vec3(0.0, 0.0, 0.1));
-glm::vec3 processKeyInput(GLFWwindow* window);
+void processKeyInput(GLFWwindow* window);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world);
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]){
 
 	model = glm::mat4(1.0);
 	model = glm::scale(model,glm::vec3(0.1));
-	sphere.setModel(model);
+	sphere.setRigidBody(model);
 
 	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
 
@@ -216,8 +216,7 @@ int main(int argc, char* argv[]){
 
 		//glDrawArrays(GL_TRIANGLES, 0, 12);
 
-		glm::vec3 trans = processKeyInput(window);
-		objects[0].setModel(glm::translate(objects[0].getModel(), trans));
+		processKeyInput(window);
 
 		// draw objects
 		int arr_size = objects.size();
@@ -247,7 +246,7 @@ int main(int argc, char* argv[]){
 
 }
 
-glm::vec3 processKeyInput(GLFWwindow* window) {
+void processKeyInput(GLFWwindow* window) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -272,19 +271,6 @@ glm::vec3 processKeyInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(DOWN, 0.1);
-
-	glm::vec3 trans = glm::vec3(0.0, 0.0, 0.0);
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	 	trans+=glm::vec3(1.0, 0.0, 0.0) / 10.0f;
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		trans += glm::vec3(-1.0, 0.0, 0.0) / 10.0f;
-
-	 if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		 trans += glm::vec3(0.0, 0.0, 1.0) / 10.0f;
-	 if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		 trans += glm::vec3(0.0, 0.0, -1.0)/10.0f;
-
-	 return trans;
 }
 
 /* Motivated student can implement the rotation using the mouse
