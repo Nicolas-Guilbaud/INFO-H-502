@@ -4,6 +4,10 @@
 #include <sstream>
 #include <vector>
 
+#include <float.h>  // For FLT_MAX and FLT_MIN
+
+#include <math.h>  // Required for fabsf
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -18,6 +22,8 @@
 #define OBJECT_H
 #define VTXMASS 1.0f
 #define NDEBUG
+#define CHARACTERISTIC_LEN 1.0f 
+#define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
 
 struct Vertex{
 	glm::vec3 position;
@@ -26,6 +32,8 @@ struct Vertex{
 };
 
 glm::mat4 btTransformToGlmMat4(const btTransform& transform);
+
+void updateExtremes(float x, float y, float z, float* xmin,float* xmax, float* ymin, float* ymax, float* zmin, float* zmax);
 
 class Object
 {	
@@ -37,6 +45,8 @@ private:
 	glm::mat4 inverse_transpose = model;
 
 	glm::vec3 scaling = glm::vec3(1.0);
+
+	glm::vec3 initial_dimensions = glm::vec3(0.0);
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
 
@@ -50,28 +60,11 @@ private:
 			// Transform the vertex positions using the current model matrix
 			hull->addPoint(btVector3(vertex.position.x, vertex.position.y, vertex.position.z), false);
 		}
+		// Scaling the hull according to the characteristic length
+		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+		hull->setLocalScaling(btVector3(s, s, s));
+
 		hull->recalcLocalAabb(); // Recalculate the bounding box
-	}
-
-	void scaleHull() {
-		if (!hull) setHullInit();
-
-		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
-	}
-
-	void setRigidBodyInit() {
-		if (rigidBody) delete rigidBody;
-		if (!hull) setHullInit();
-
-		// Set up the rigid body
-		btScalar mass = (btScalar)1.0;
-		btVector3 inertia(0, 0, 0);
-		hull->calculateLocalInertia(mass, inertia); // Computes inertia for dynamic objects
-		btMotionState* motionState = new btDefaultMotionState();
-		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
-		rigidBody = new btRigidBody(*rbInfo);
-
-		setRigidBody(glm::mat4(1.0)); // setting the rigid body at the origin as default 
 	}
 
 	void setModel(const glm::mat4& newModel) {
@@ -106,6 +99,9 @@ public:
 		try{
 			file.open(path);
 			std::string line;
+			float xmin = FLT_MAX, xmax = FLT_MIN;
+			float ymin = FLT_MAX, ymax = FLT_MIN;
+			float zmin = FLT_MAX, zmax = FLT_MIN;
 			while(std::getline(file,line)){
 				std::istringstream streamedLine(line);
 				std::string word;
@@ -114,6 +110,7 @@ public:
 					float x,y,z;
 					float vmass = VTXMASS;
 					streamedLine >> x >> y >> z;
+					updateExtremes(x,y,z,&xmin,&xmax,&ymin,&ymax,&zmin,&zmax);
 					position.push_back(glm::vec3(x,y,z));
 				}
 
@@ -159,6 +156,11 @@ public:
 					}
 				}
 			}
+			std::cout << "The initial dimensions are x:[" << xmin << ", " << xmax << "] y:[" << ymin << ", " << ymax << "] z:[" << zmin << ", " << zmax << "] " << std::endl;
+			initial_dimensions = glm::vec3(fabsf(xmax - xmin), fabsf(ymax - ymin), fabsf(zmax - zmin));
+			float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+			std::cout << "The normalized dimensions are x:[" << s*xmin << ", " << s*xmax << "] y:[" << s*ymin << ", " << s*ymax << "] z:[" << s*zmin << ", " << s*zmax << "] " << std::endl;
+			
 		}catch(std::ifstream::failure e){
 			std::cout << "ERROR READING '" << path << "' OBJ FILE:\n" << e.what() << std::endl;
 		}
@@ -176,14 +178,13 @@ public:
 		numVertices = vertices.size();
 
 		setHullInit();
-		setRigidBodyInit();
 	}
 
-	void setRigidBody(const glm::mat4& nextModel) { // set the RigidBody in the world coordinates according to nextModel
-		if (!hull) setHullInit();
-		if (!rigidBody) setRigidBodyInit();
+	void setRigidBody(const glm::mat4& nextModel, float m) { // set the RigidBody in the world coordinates according to nextModel
+		if (rigidBody) delete rigidBody;
 
-		setModel(nextModel);
+
+		btScalar mass = (btScalar)m;
 
 		// Extract translation (last column of the matrix)
 		btVector3 position(nextModel[3][0], nextModel[3][1], nextModel[3][2]);
@@ -193,21 +194,29 @@ public:
 		glm::quat glmQuat = glm::quat_cast(rotationMatrix);
 		btQuaternion rotation(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
 
-		rigidBody->proceedToTransform(btTransform(rotation, position));
-
-		glm::vec3 scaling = glm::vec3(glm::length(glm::vec3(nextModel[0])),
+		// Extract user-imposed scaling
+		glm::vec3 model_scale = glm::vec3(glm::length(glm::vec3(nextModel[0])),
 			glm::length(glm::vec3(nextModel[1])),
 			glm::length(glm::vec3(nextModel[2])));
 
-		setScaling(scaling);
-	}
+		// Computes inertia for dynamic objects after rescaling the hull
+		btVector3 inertia(0, 0, 0);
+		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+		scaling = s * model_scale;
+		hull->setLocalScaling(btVector3(scaling.x,scaling.y,scaling.z));
+		hull->calculateLocalInertia(mass, inertia);
+		
 
-	void setScaling(glm::vec3 s) {
-		scaling = s;
-		scaleHull();
+		// Set up the rigid body
+		btMotionState* motionState = new btDefaultMotionState();
+		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
+		rigidBody = new btRigidBody(*rbInfo);
+		rigidBody->proceedToTransform(btTransform(rotation, position));
+
 	}
 
 	void setVelocity(glm::vec3 V) {
+		if (!rigidBody) setRigidBody(glm::mat4(1.0),1.0);
 		rigidBody->setLinearVelocity(btVector3(V.x,V.y,V.z));
 	}
 
@@ -216,6 +225,7 @@ public:
 	}
 
 	void nextFrame() {
+		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		btTransform updatedTransform;
 		rigidBody->getMotionState()->getWorldTransform(updatedTransform);
 		setModel(glm::scale(btTransformToGlmMat4(updatedTransform),scaling));// Retrieve updated transform for an object
@@ -312,4 +322,13 @@ glm::mat4 btTransformToGlmMat4(const btTransform& transform) {
 	matrix[3][2] = origin.z();
 
 	return matrix;
+}
+
+void updateExtremes(float x, float y, float z, float* xmin, float* xmax, float* ymin, float* ymax, float* zmin, float* zmax) {
+	if (*xmin > x) *xmin = x;
+	if (*xmax < x) *xmax = x;
+	if (*ymin > y) *ymin = y;
+	if (*ymax < y) *ymax = y;
+	if (*zmin > z) *zmin = z;
+	if (*zmax < z) *zmax = z;
 }

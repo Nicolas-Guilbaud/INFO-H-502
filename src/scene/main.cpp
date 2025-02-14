@@ -1,5 +1,6 @@
 // standard C++ include files
-#include<iostream>
+#include <stdio.h>
+#include <math.h>  // Required for sqrt
 
 //include glad before GLFW to avoid header conflict or define "#define GLFW_INCLUDE_NONE"
 #include <glad/glad.h>
@@ -134,31 +135,42 @@ int main(int argc, char* argv[]){
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 
 	//Creating the objects
-	Object cube(PATH_TO_MESHES "/cube.obj");
-	cube.makeObject(shader, false);
+	glm::mat3 permutation = glm::mat3(1.0);
+	glm::vec3 temp = permutation[1];
+	permutation[1] = permutation[2];
+	permutation[2] = temp;
+	Object ball(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
+	ball.makeObject(shader, false);
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::translate(model, glm::vec3(10, 0.0, 0.0));
-	model = glm::rotate(model, glm::radians(45.0f), glm::vec3(1, 1, 0));
-	model = glm::scale(model, glm::vec3(1, 0.5, 0.5));
-	cube.setRigidBody(model);
+	model = glm::scale(glm::translate(model, permutation*glm::vec3(-150.0,0.0,0.0)),glm::vec3(1.0));
+	ball.setRigidBody(model, 10.0);
+	ball.getRigidBody()->setDamping(0.0f, 0.0f);
+	ball.getRigidBody()->setFriction(0.0f);
 
-	Object sphere(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
-	sphere.makeObject(shader, false);
-	sphere.setVelocity(glm::vec3(10.0,0.0,0.0));
-
-	model = glm::mat4(1.0);
-	model = glm::scale(model,glm::vec3(0.1));
-	sphere.setRigidBody(model);
-
-	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
-
-	sphere_coarse.makeObject(shader, false);
-	sphere_coarse.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0),glm::vec3(5.0,0.0,0.0)),glm::vec3(1.5,1.5,1.5)));
+	ball.setVelocity(permutation * glm::vec3(50.0, 0.0, 0.0));
 
 	std::vector<Object> objects;
-	objects.push_back(cube);
-	objects.push_back(sphere);
-	objects.push_back(sphere_coarse);
+	objects.push_back(ball);
+
+	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
+
+	std::vector<glm::vec3> pin_positions = {
+		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(1.5f, sqrt3 / 2.0f, 0.0f),
+		glm::vec3(-0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(-1.5f, sqrt3 / 2.0f, 0.0f),
+		glm::vec3(0.5f, -sqrt3 / 2.0f, 0.0f), glm::vec3(-0.5f, -sqrt3 / 2.0f, 0.0f),
+		glm::vec3(0.0f, -sqrt3, 0.0f)
+	};
+
+	for (auto& pos : pin_positions) {
+		Object pin(PATH_TO_MESHES "/PinSmooth.obj");
+		pin.makeObject(shader, false);
+		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
+		pin.getRigidBody()->setRestitution(0.1f);
+		pin.getRigidBody()->setFriction(0.3f);
+		pin.getRigidBody()->setDamping(0.1f, 0.1f);
+		objects.push_back(pin);
+	}
 
 	//Initializing the dynamic collision world
 	btDefaultCollisionConfiguration* collisionConfig = new btDefaultCollisionConfiguration();
@@ -167,31 +179,33 @@ int main(int argc, char* argv[]){
 	int numSolvers = 1;
 	btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver();
 	btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfig);
-	dynamicsWorld->setGravity(btVector3(0.0,0.0,0.0));
-	//dynamicsWorld->setGravity(btVector3(0, -9.81, 0)); // Set gravity
+	//dynamicsWorld->setGravity(btVector3(0.0,0.0,0.0));
+	dynamicsWorld->setGravity(btVector3(0, -9.81, 0)); // Set gravity
 
 	for (auto& obj: objects) {
 		dynamicsWorld->addRigidBody(obj.getRigidBody());
 	}
 
-	//addGround( dynamicsWorld);
+	addGround( dynamicsWorld);
 
 	const glm::vec3 light_pos = glm::vec3(1.0, 2.0, 2.0);
 	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
-	auto fps = [&](double now) {
+	auto fps = [&](double now) -> double {
 		double deltaTime = now - prev;
 		deltaFrame++;
 		if (deltaTime > 0.5) {
 			prev = now;
-			const double fpsCount = (double)deltaFrame / deltaTime;
+			const double fpsCount = static_cast<double>(deltaFrame) / deltaTime;
 			deltaFrame = 0;
 			std::cout << "\r FPS: " << fpsCount;
 			std::cout.flush();
+			return fpsCount;
 		}
-	};
+		return -1.0; // Return a sentinel value when FPS is not updated
+		};
 
 	glm::mat4 view = camera.GetViewMatrix();
 	glm::mat4 perspective = camera.GetProjectionMatrix();
@@ -227,15 +241,15 @@ int main(int argc, char* argv[]){
 			objects[i].draw();
 		}
 
-		//fps(now);
 		glfwSwapBuffers(window);
 
+		float fpsCount = (float)fps(now);
 		// Step simulation
-		float timeStep = 1.0f / 60.0f; // 60 FPS
-		int maxSubSteps = 10; // More substeps = better physics accuracy
+		float timeStep = 1.0f / 60.0; // 60 FPS
+		int maxSubSteps = 5; // More substeps = better physics accuracy
 		dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
 
-		DetectCollisions(dynamicsWorld);
+		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
 	}
 
 	//clean up ressource
@@ -330,6 +344,7 @@ void addGround(btDynamicsWorld* d_world) {
 	// Set mass to 0 (static object)
 	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
 	btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+	groundRigidBody->setRestitution(0.1f);
 
 	// Add to the dynamics world
 	d_world->addRigidBody(groundRigidBody);
