@@ -18,12 +18,12 @@ void main() {
     vec3 L = normalize(u_light_pos - v_frag_coords);
     vec3 V = normalize(u_view_pos - v_frag_coords);
     vec3 N = normalize(v_normal);
-    //vec3 R = max(2*dot(N,L)*N-L,0);
-    //vec3 color = vec3(dot(R,V));
+    vec3 R_1 = max(2*dot(N,L)*N-L,0);
+    vec3 color = vec3(dot(R_1,V));
     vec3 R = reflect(-L,N);
     float cosTheta = dot(R , V); 
     float spec = pow(max(cosTheta,0.0), shininess); 
     float specular = spec_strength * spec;
-    FragColor = texture(img,tex_coord);
-    // FragColor = vec4(vec3(specular), 1.0) * texture(img,tex_coords); 
+    // FragColor = texture(img,tex_coord);
+    FragColor = vec4(color+vec3(specular), 1.0)*texture(img,tex_coord);
 }

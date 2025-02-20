@@ -219,7 +219,7 @@ public:
 
 		//texture
 		if(useTexture){
-			auto att_texture = glGetAttribLocation(shader.ID, "tex_coord");
+			auto att_texture = glGetAttribLocation(shader.ID, "tex_coords");
 			glEnableVertexAttribArray(att_texture);
 			glVertexAttribPointer(att_texture, 2, GL_FLOAT, false, 8 * sizeof(float), (void*) (sizeof(float)*3));
 		}
@@ -255,6 +255,15 @@ public:
 		//bind your vertex arrays and call glDrawArrays
 		glBindVertexArray(this->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, numVertices);
+		// glDrawElements(GL_TRIANGLES,numVertices,GL_UNSIGNED_INT,0);
+	}
+
+	const bool hasTexture() const{
+		return this->textureFlag;
+	}
+
+	const GLuint getTexture() const{
+		return this->texture;
 	}
 };
 #endif

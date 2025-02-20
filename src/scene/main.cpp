@@ -141,12 +141,15 @@ int main(int argc, char* argv[]){
 	cube.setModel(model);
 
 	Object sphere(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
-	sphere.makeObject(shader, false);
+	sphere.makeObject(shader, true);
+	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
+	sphere.changeTexture(ballTex);
 
 	model = glm::mat4(1.0);
 	model = glm::scale(model,glm::vec3(0.1));
 	sphere.setModel(model);
 
+	//TEXTURE
 	Object sphere_coarse(PATH_TO_MESHES "/PinAvg.obj");
 	sphere_coarse.makeObject(shader, true);
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
@@ -229,11 +232,13 @@ int main(int argc, char* argv[]){
 		objects[0].setModel(glm::translate(objects[0].getModel(), trans));
 
 		// draw objects
-		int arr_size = objects.size();
-		for (int i = 0; i < arr_size; i++) {
-			shader.setMatrix4("M", objects[i].getModel());
-			shader.setMatrix4("itM", objects[i].getInverseTranspose());
-			objects[i].draw();
+		for (Object o : objects) {
+			shader.setMatrix4("M", o.getModel());
+			shader.setMatrix4("itM", o.getInverseTranspose());
+			if(o.hasTexture()){
+				shader.setTexture("img",0);
+			}
+			o.draw();
 		}
 
 		//fps(now);

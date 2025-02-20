@@ -82,7 +82,7 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
-    void setTexture(const char* name, const GLuint texture, GLuint unit){
+    void setTexture(const char* name, const GLuint unit){
         glUniform1i(glGetUniformLocation(ID,name),unit);
     }
 

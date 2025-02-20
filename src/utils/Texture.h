@@ -23,6 +23,7 @@ static GLuint loadTexture(std::string path){
     }
 
     glGenTextures(1,&buffer);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,buffer);
 
     //TODO: modifier les options
