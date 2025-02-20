@@ -84,8 +84,8 @@ Risque sur les prochaines tâches: l'adhérence au sol
 - [x] Se procurer le chapitre 9
 
 - Loup:
-  - [ ] setup la piste avec les quilles
-    - [ ] avoir un sol
+  - [x] setup la piste avec les quilles
+    - [x] avoir un sol
     - [x] avoir des quilles en triangle
     - [x] faire rouler boule de bowling vers les quilles
 - Nicolas:
@@ -93,3 +93,18 @@ Risque sur les prochaines tâches: l'adhérence au sol
   - [ ] cubemap
 
 ## Résumé
+- Nicolas a ajouté les textures aux objets, il s'est brièvement penché sur la question du cubemap mais il faut d'abord restructurer le code (en collaboration le samedi 22/02) 
+- Loup a créé le latex pour le rapport et configuré une scène de bowling basique. Cependant problème de framerate dû au temps de calcul et interactions quilles-sol non-réalistes
+- Entrevue avec l'assistante lors de la séance de questions-réponses: procuration du chapitre 9 du livre de référence, conseils pour fluidifier la scène dynamique
+
+# Réunion 27/02/2025
+
+## Objectifs
+- Restructurer le code orienté objet, plus particulièrement la classe object.h qui doit être scindée en sous-classes
+- Nicolas:
+  - [ ] ajouter le cubemap
+
+- Loup:
+  - [ ] régler problème de framerate
+  - [ ] régler interactions quilles-sol
+  
