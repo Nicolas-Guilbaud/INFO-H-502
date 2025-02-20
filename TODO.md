@@ -81,15 +81,15 @@ Risque sur les prochaines tâches: l'adhérence au sol
 
 ## Objectifs
 
-- [ ] Se procurer le chapitre 9
+- [x] Se procurer le chapitre 9
 
 - Loup:
   - [ ] setup la piste avec les quilles
     - [ ] avoir un sol
-    - [ ] avoir des quilles en triangle
-    - [ ] faire rouler boule de bowling vers les quilles
+    - [x] avoir des quilles en triangle
+    - [x] faire rouler boule de bowling vers les quilles
 - Nicolas:
-  - [ ] textures sur les meshes
+  - [x] textures sur les meshes
   - [ ] cubemap
 
 ## Résumé
