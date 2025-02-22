@@ -15,6 +15,7 @@
 #include "../utils/camera.h"
 #include "../utils/shader.h"
 #include "../utils/object.h"
+#include "../utils/rigidObject.cpp"
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
 
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]){
 	glm::vec3 temp = permutation[1];
 	permutation[1] = permutation[2];
 	permutation[2] = temp;
-	Object ball(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
+	rigidObject ball(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
 	ball.makeObject(shader, true);
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
 	ball.changeTexture(ballTex);
@@ -150,7 +151,7 @@ int main(int argc, char* argv[]){
 
 	ball.setVelocity(permutation * glm::vec3(50.0, 0.0, 0.0));
 
-	std::vector<Object> objects;
+	std::vector<rigidObject> objects;
 	objects.push_back(ball);
 
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
@@ -166,7 +167,7 @@ int main(int argc, char* argv[]){
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
 
 	for (auto& pos : pin_positions) {
-		Object pin(PATH_TO_MESHES "/PinSmooth.obj");
+		rigidObject pin(PATH_TO_MESHES "/PinSmooth.obj");
 		pin.makeObject(shader, true);
 		pin.changeTexture(pinTex);
 		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
@@ -237,7 +238,7 @@ int main(int argc, char* argv[]){
 		processKeyInput(window);
 
 		// draw objects
-		for (Object o : objects) {
+		for (rigidObject o : objects) {
 			o.nextFrame();
 			shader.setMatrix4("M", o.getModel());
 			shader.setMatrix4("itM", o.getInverseTranspose());
