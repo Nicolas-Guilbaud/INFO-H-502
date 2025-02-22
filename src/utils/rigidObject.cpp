@@ -17,24 +17,43 @@ private:
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 
-	void setHullInit() {
+	void setHullInit(bool isCubic) {
 		if (hull) delete hull;
 
 		hull = new btConvexHullShape();
-		for (const auto& vertex : this->mesh.getVertices()) {
-			// Transform the vertex positions using the current model matrix
-			hull->addPoint(btVector3(vertex.position.x, vertex.position.y, vertex.position.z), false);
+
+		if (isCubic) {
+			btVector3 halfExtents(mesh.getInitialDims().x * 0.5f, mesh.getInitialDims().y * 0.5f, mesh.getInitialDims().z * 0.5f);
+			btVector3 vertices[8] = {
+			btVector3(-halfExtents.x(), -halfExtents.y(), -halfExtents.z()),
+			btVector3(halfExtents.x(), -halfExtents.y(), -halfExtents.z()),
+			btVector3(-halfExtents.x(),  halfExtents.y(), -halfExtents.z()),
+			btVector3(halfExtents.x(),  halfExtents.y(), -halfExtents.z()),
+			btVector3(-halfExtents.x(), -halfExtents.y(),  halfExtents.z()),
+			btVector3(halfExtents.x(), -halfExtents.y(),  halfExtents.z()),
+			btVector3(-halfExtents.x(),  halfExtents.y(),  halfExtents.z()),
+			btVector3(halfExtents.x(),  halfExtents.y(),  halfExtents.z())
+			};
+			for (int i = 0; i < 8; i++) {
+				hull->addPoint(vertices[i]);
+			}
 		}
-		// Scaling the hull according to the characteristic length
-		glm::vec3 initial_dimensions = mesh.getInitialDims();
-		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
-		hull->setLocalScaling(btVector3(s, s, s));
-		hull->recalcLocalAabb(); // Recalculate the bounding box
+		else {
+			for (const auto& vertex : mesh.getVertices()) {
+				// Transform the vertex positions using the current model matrix
+				hull->addPoint(btVector3(vertex.position.x, vertex.position.y, vertex.position.z), false);
+			}
+			// Scaling the hull according to the characteristic length
+			float s = CHARACTERISTIC_LEN / MAX3(mesh.getInitialDims().x, mesh.getInitialDims().y, mesh.getInitialDims().z);
+			hull->setLocalScaling(btVector3(s, s, s));
+
+			hull->recalcLocalAabb(); // Recalculate the bounding box
+		}
 	}
 
 public:
-	rigidObject(Mesh mesh) : Object(mesh) { // constructor
-		setHullInit();
+	rigidObject(Mesh mesh, bool isCubic) : Object(mesh) { // constructor
+		setHullInit(isCubic);
 	}
 
 	void setRigidBody(const glm::mat4& nextModel, float m) { // set the RigidBody in the world coordinates according to nextModel

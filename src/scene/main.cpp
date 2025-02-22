@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
 	permutation[2] = temp;
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh);
+	rigidObject ball(ballMesh, false);
 	glm::mat4 model = glm::mat4(1.0);
 
 	model = glm::scale(glm::translate(model, permutation*glm::vec3(-150.0,0.0,0.0)),glm::vec3(1.0));
@@ -171,7 +171,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh);
+		rigidObject pin(pinMesh, true);
 		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
 		pin.getRigidBody()->setRestitution(0.1f);
 		pin.getRigidBody()->setFriction(0.3f);

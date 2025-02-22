@@ -17,6 +17,8 @@
 #include<glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
+
+#include "camera.h"
 #include "./Mesh.h"
 #include "./Light.h"
 
