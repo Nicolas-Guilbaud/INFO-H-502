@@ -133,25 +133,28 @@ int main(int argc, char* argv[]){
 
     //TODO: Shader
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
+	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
+	
 
 	//Creating the objects
+	std::vector<rigidObject> objects;
+
 	glm::mat3 permutation = glm::mat3(1.0);
 	glm::vec3 temp = permutation[1];
 	permutation[1] = permutation[2];
 	permutation[2] = temp;
-	rigidObject ball(PATH_TO_MESHES "/Bowling_Ball_Clean.obj");
-	ball.makeObject(shader, true);
-	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
-	ball.changeTexture(ballTex);
+
+	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
+	rigidObject ball(ballMesh);
 	glm::mat4 model = glm::mat4(1.0);
+
 	model = glm::scale(glm::translate(model, permutation*glm::vec3(-150.0,0.0,0.0)),glm::vec3(1.0));
+	
 	ball.setRigidBody(model, 10.0);
 	ball.getRigidBody()->setDamping(0.0f, 0.0f);
 	ball.getRigidBody()->setFriction(0.0f);
-
 	ball.setVelocity(permutation * glm::vec3(50.0, 0.0, 0.0));
 
-	std::vector<rigidObject> objects;
 	objects.push_back(ball);
 
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
@@ -165,11 +168,10 @@ int main(int argc, char* argv[]){
 	};
 
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
+	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(PATH_TO_MESHES "/PinSmooth.obj");
-		pin.makeObject(shader, true);
-		pin.changeTexture(pinTex);
+		rigidObject pin(pinMesh);
 		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
 		pin.getRigidBody()->setRestitution(0.1f);
 		pin.getRigidBody()->setFriction(0.3f);
@@ -193,7 +195,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld);
 
-	const glm::vec3 light_pos = glm::vec3(1.0, 2.0, 2.0);
+	const Light l(glm::vec3(1.0, 2.0, 2.0));
 	
 	double prev = 0;
 	int deltaFrame = 0;
@@ -212,40 +214,19 @@ int main(int argc, char* argv[]){
 		return -1.0; // Return a sentinel value when FPS is not updated
 		};
 
-	glm::mat4 view = camera.GetViewMatrix();
-	glm::mat4 perspective = camera.GetProjectionMatrix();
-
 	//Rendering
 
 	while (!glfwWindowShouldClose(window)) {
-		
-		view = camera.GetViewMatrix();
 		glfwPollEvents();
 		double now = glfwGetTime();
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-		shader.use();
-
-		shader.setMatrix4("V", view);
-		shader.setMatrix4("P", perspective);
-		shader.setVector3f("u_view_pos", camera.Position);
-		shader.setVector3f("u_light_pos", light_pos);
-
-		//glDrawArrays(GL_TRIANGLES, 0, 12);
-
 		processKeyInput(window);
 
 		// draw objects
 		for (rigidObject o : objects) {
-			o.nextFrame();
-			shader.setMatrix4("M", o.getModel());
-			shader.setMatrix4("itM", o.getInverseTranspose());
-			if(o.hasTexture()){
-				shader.setTexture("img",0);
-			}
-			o.draw();
+			o.draw(camera,l);
 		}
 
 		glfwSwapBuffers(window);

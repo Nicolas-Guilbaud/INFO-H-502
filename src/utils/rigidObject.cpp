@@ -4,39 +4,36 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-class rigidObject : public Object
-{
-private:
-	glm::mat4 model = glm::mat4(1.0);
-	glm::mat4 inverse_transpose = model;
+#define VTXMASS 1.0f
+#define NDEBUG
+#define CHARACTERISTIC_LEN 1.0f 
+#define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
 
+
+class rigidObject : public Object{
+private:
 	glm::vec3 scaling = glm::vec3(1.0);
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
-
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 
 	void setHullInit() {
 		if (hull) delete hull;
 
 		hull = new btConvexHullShape();
-		for (const auto& vertex : vertices) {
+		for (const auto& vertex : this->mesh.getVertices()) {
 			// Transform the vertex positions using the current model matrix
 			hull->addPoint(btVector3(vertex.position.x, vertex.position.y, vertex.position.z), false);
 		}
 		// Scaling the hull according to the characteristic length
+		glm::vec3 initial_dimensions = mesh.getInitialDims();
 		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 		hull->setLocalScaling(btVector3(s, s, s));
-
 		hull->recalcLocalAabb(); // Recalculate the bounding box
 	}
 
-	void setModel(const glm::mat4& newModel) {
-		model = newModel;
-		inverse_transpose = glm::inverse(glm::transpose(model));
-	}
 public:
-	rigidObject(const char* path) : Object(path) { // constructor
+	rigidObject(Mesh mesh) : Object(mesh) { // constructor
 		setHullInit();
 	}
 
@@ -61,6 +58,7 @@ public:
 
 		// Computes inertia for dynamic objects after rescaling the hull
 		btVector3 inertia(0, 0, 0);
+		glm::vec3 initial_dimensions = mesh.getInitialDims();
 		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 		scaling = s * model_scale;
 		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
@@ -79,19 +77,12 @@ public:
 		rigidBody->setLinearVelocity(btVector3(V.x, V.y, V.z));
 	}
 
-	const glm::mat4& getModel() {
-		return model;
-	}
-
-	void nextFrame() {
+	void draw(Camera c, Light l) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		btTransform updatedTransform;
 		rigidBody->getMotionState()->getWorldTransform(updatedTransform);
 		setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
-	}
-
-	const glm::mat4& getInverseTranspose() {
-		return inverse_transpose;
+		Object::draw(c,l); //classic draw routine
 	}
 
 	btRigidBody* getRigidBody() {
