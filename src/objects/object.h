@@ -16,9 +16,10 @@
 #include <glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 
-#include "shader.h"
-#include "./Mesh.h"
-#include "./Light.h"
+#include "../utils/shader.h"
+#include "../meshes/Mesh.h"
+#include "../utils/Light.h"
+#include "../utils/camera.h"
 
 #ifndef OBJECT_H
 #define OBJECT_H

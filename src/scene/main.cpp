@@ -14,8 +14,9 @@
 //user-defined header files
 #include "../utils/camera.h"
 #include "../utils/shader.h"
-#include "../utils/object.h"
-#include "../utils/rigidObject.cpp"
+#include "../objects/object.h"
+#include "../objects/rigidObject.cpp"
+#include "../objects/Cubemap.cpp"
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
 
@@ -131,6 +132,10 @@ int main(int argc, char* argv[]){
 
     glEnable(GL_DEPTH_TEST);
 
+	//Cubemap
+	GLuint cubemapTex = loadCubemap(PATH_TO_TEXTURES "/cubemap");
+	Cubemap cubemapObj(cubemapTex);
+
     //TODO: Shader
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
@@ -224,10 +229,14 @@ int main(int argc, char* argv[]){
 
 		processKeyInput(window);
 
+		glDepthFunc(GL_LEQUAL);
+		cubemapObj.draw(camera,l);
+		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject o : objects) {
 			o.draw(camera,l);
 		}
+
 
 		glfwSwapBuffers(window);
 

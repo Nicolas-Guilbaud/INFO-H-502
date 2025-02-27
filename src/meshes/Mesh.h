@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <string>
 #include <vector>
-#include "./shader.h"
+#include "../utils/shader.h"
 
 #define VTXMASS 1.0f
 #define NDEBUG
@@ -27,7 +27,7 @@ static void updateExtremes(float x, float y, float z, float* xmin, float* xmax, 
 }
 
 class Mesh{
-private:
+protected:
     GLuint VAO,VBO, texture;
     bool useTexture = false;
     int numVertices;
@@ -201,7 +201,7 @@ public:
         this->texture = texture;
 	}
 
-    void draw() {
+    virtual void draw() {
 
 		if(useTexture){
 			glActiveTexture(GL_TEXTURE0);
