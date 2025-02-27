@@ -10,7 +10,7 @@
     - [ ] Light
 - [ ] File loading
     - [x] Load a mesh
-    - [ ] Load a texture
+    - [x] Load a texture
     - [x] Load a shader
     - [ ] Load the entire scene
 - [ ] Interactions:
@@ -100,11 +100,45 @@ Risque sur les prochaines tâches: l'adhérence au sol
 # Réunion 27/02/2025
 
 ## Objectifs
-- Restructurer le code orienté objet, plus particulièrement la classe object.h qui doit être scindée en sous-classes
+
+- [x] Restructurer le code orienté objet, plus particulièrement la classe object.h qui doit être scindée en sous-classes
 - Nicolas:
-  - [ ] ajouter le cubemap
+  - [x] ajouter le cubemap
 
 - Loup:
-  - [ ] régler problème de framerate
-  - [ ] régler interactions quilles-sol
-  
+  - [x] régler problème de framerate
+  - [x] régler interactions quilles-sol
+
+## Résumé
+
+Les hitbox des quilles sont désormais cubiques  
+-> tester avec des hitbox cylindriques
+
+Cela a également réglé les problèmes de framerate
+
+Le cubemap a été ajouté sur une autre branche (doit être merged)
+
+Fcts basiques qu'il reste à implémenter:
+
+- Game logic:
+  - choix direction + force
+- plusieurs caméras statiques (en + de la caméra libre)
+- réflection/refraction
+
+Avant de continuer les lumières, il a été convenu de lire le chapitre 9
+et d'en faire un résumé pour préparer la défense orale
+
+# Réunion 06/03/2025
+
+## Objectifs
+
+- [ ] Lecture Chapitre 9
+
+Loup:
+    - [ ] Revoir les labos (FBO, lumières, textures)
+    - [ ] Setup les caméras (1 libre, plusieurs statiques)
+Nicolas:
+    - [ ] Textures: sol, cubemap
+    - [ ] Game logic
+
+
