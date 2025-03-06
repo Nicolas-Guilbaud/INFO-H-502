@@ -153,7 +153,7 @@ Nicolas:
 
 ## Objectifs
 
-- [ ] Lecture ciblée du Chapitre 9 au vu de programmer les shaders d'ici à la fin du mois. En particulier , ceux sur la microgeometry (9.5), la reflectance (9.4) et la BRDF for surface reflection (9.8).
+- [ ] Lecture ciblée du Chapitre 9 au vu de programmer les shaders d'ici à la fin du mois. En particulier , ceux sur la microgeometry (9.6), la reflectance (9.5) et la BRDF for surface reflection (9.8).
 
 Loup: 
     - [ ] Régler bug de désaccord entre hitbox et rendered mesh
