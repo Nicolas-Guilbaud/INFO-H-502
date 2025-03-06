@@ -63,20 +63,14 @@ public:
 	void alignAlongZ(glm::vec3 dims) {
 		if (MAX3(dims.x, dims.y, dims.z) > dims.z) {
 			if (dims.x > dims.z && dims.x > dims.y) {
-				#ifdef NDEBUG
-				std::cout << "maximal dimensions along x axis" << std::endl;
 				glm::vec4 temp = permutation[0];
 				permutation[0] = permutation[2];
 				permutation[2] = temp;
-				#endif
 			}
 			else if (dims.y > dims.z && dims.y > dims.x) {
-				#ifdef NDEBUG
-				std::cout << "maximal dimensions along y axis" << std::endl;
 				glm::vec4 temp = permutation[1];
 				permutation[1] = permutation[2];
 				permutation[2] = temp;
-				#endif
 			}
 		}
 	}

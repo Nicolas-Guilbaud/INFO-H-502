@@ -26,12 +26,20 @@ bool firstMouse = true;
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 
-Camera camera(glm::vec3(0.0, 0.0, 0.1));
-void processKeyInput(GLFWwindow* window);
+std::vector<Camera> theCameras = {
+	Camera(glm::vec3(0.0f, 10.0f, 2.0f),glm::vec3(0.0,0.25,-1.0),-90.0,-75.0, false),
+	Camera(glm::vec3(3.75f, 8.6f, 8.4f), glm::vec3(-0.3, 0.82, -0.5), -125.0, -35.0, false),
+	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
+	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
+};
+int camIdx = 0;
+Camera camera = theCameras[camIdx];
+
+void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world);
-
+void switchCameras();
 
 
 #ifndef NDEBUG
@@ -143,13 +151,14 @@ int main(int argc, char* argv[]){
 	std::vector<rigidObject> objects;
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, false);
+	rigidObject ball(ballMesh, true);
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-10.0,0.0,0.0)),glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0,0.0)),glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.setVelocity( glm::vec3(0.0, 0.0, 0.0));
+	ball.getRigidBody()->setFriction(0.0f);
+
 
 	objects.push_back(ball);
 
@@ -216,7 +225,7 @@ int main(int argc, char* argv[]){
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		processKeyInput(window);
+		processKeyInput(window, ball);
 
 		// draw objects
 		for (rigidObject o : objects) {
@@ -242,7 +251,7 @@ int main(int argc, char* argv[]){
 
 }
 
-void processKeyInput(GLFWwindow* window) {
+void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -267,6 +276,15 @@ void processKeyInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(DOWN, 0.1);
+
+	//Launch ball with enter 
+	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+		ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+
+	//Switch cameras with C
+	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+		switchCameras();
+
 }
 
 /* Motivated student can implement the rotation using the mouse
@@ -323,4 +341,8 @@ void addGround(btDynamicsWorld* d_world) {
 
 	// Add to the dynamics world
 	d_world->addRigidBody(groundRigidBody);
+}
+
+void switchCameras() {
+	camera = theCameras[(++camIdx) % theCameras.size()];
 }
