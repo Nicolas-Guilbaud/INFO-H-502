@@ -132,13 +132,32 @@ et d'en faire un résumé pour préparer la défense orale
 
 ## Objectifs
 
-- [ ] Lecture Chapitre 9
+- [x] Lecture Chapitre 9
 
 Loup:
     - [ ] Revoir les labos (FBO, lumières, textures)
-    - [ ] Setup les caméras (1 libre, plusieurs statiques)
+    - [x] Setup les caméras (1 libre, plusieurs statiques)
 Nicolas:
     - [ ] Textures: sol, cubemap
     - [ ] Game logic
 
+## Résumé
+- Début du chapitre 9 lu par Nicolas (jusque 9.5) et survolé par Loup (9.3, 9.4) qui souhaite aller à l'essentiel étant donné les instructions vagues du professeur
+
+Loup:
+    - Trop ambitieux de refaire tous les labos en une semaine. Système de 4 caméras set up dont une amovible. 
+Nicolas:
+    - Pas eu le temps de réfléchir à l'implémentation de la Game logic de manière substantielle. A dégoté un mesh d'une 100aine d'objets représenatant un complexe de loisir avec des pistes de bowling. 
+
+# Réunion 13/03/2025
+
+## Objectifs
+
+- [ ] Lecture ciblée du Chapitre 9 au vu de programmer les shaders d'ici à la fin du mois. En particulier , ceux sur la microgeometry (9.5), la reflectance (9.4) et la BRDF for surface reflection (9.8).
+
+Loup: 
+    - [ ] Régler bug de désaccord entre hitbox et rendered mesh
+Nicolas:
+    - [ ] Implémentation d'un mesh texturisé pour le sol
+    - [ ] Implémentation de la cubemap
 
