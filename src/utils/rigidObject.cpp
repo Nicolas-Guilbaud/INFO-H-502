@@ -56,9 +56,10 @@ public:
 		setHullInit(isCubic);
 	}
 
-	void setRigidBody(const glm::mat4& nextModel, float m) { // set the RigidBody in the world coordinates according to nextModel
+	void setRigidBody(const glm::mat4& Model, float m) { // set the RigidBody in the world coordinates according to nextModel
 		if (rigidBody) delete rigidBody;
 
+		glm::mat4 nextModel = permutation * Model;
 
 		btScalar mass = (btScalar)m;
 

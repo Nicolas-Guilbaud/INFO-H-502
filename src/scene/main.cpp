@@ -32,6 +32,8 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world);
 
+
+
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
 	GLenum type,
@@ -135,36 +137,30 @@ int main(int argc, char* argv[]){
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
 	
+	//Setting up the cameras
 
 	//Creating the objects
 	std::vector<rigidObject> objects;
-
-	glm::mat3 permutation = glm::mat3(1.0);
-	glm::vec3 temp = permutation[1];
-	permutation[1] = permutation[2];
-	permutation[2] = temp;
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh, false);
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, permutation*glm::vec3(-150.0,0.0,0.0)),glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-10.0,0.0,0.0)),glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.getRigidBody()->setDamping(0.0f, 0.0f);
-	ball.getRigidBody()->setFriction(0.0f);
-	ball.setVelocity(permutation * glm::vec3(50.0, 0.0, 0.0));
+	ball.setVelocity( glm::vec3(0.0, 0.0, 0.0));
 
 	objects.push_back(ball);
 
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
 
 	std::vector<glm::vec3> pin_positions = {
-		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
-		glm::vec3(0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(1.5f, sqrt3 / 2.0f, 0.0f),
-		glm::vec3(-0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(-1.5f, sqrt3 / 2.0f, 0.0f),
-		glm::vec3(0.5f, -sqrt3 / 2.0f, 0.0f), glm::vec3(-0.5f, -sqrt3 / 2.0f, 0.0f),
-		glm::vec3(0.0f, -sqrt3, 0.0f)
+		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f,-1.0f,  0.0f),
+		glm::vec3(sqrt3 / 2.0f,0.5f,  0.0f), glm::vec3(sqrt3 / 2.0f, 1.5f, 0.0f),
+		glm::vec3(sqrt3 / 2.0f,-0.5f,  0.0f), glm::vec3(sqrt3 / 2.0f,-1.5f,  0.0f),
+		glm::vec3(-sqrt3 / 2.0f,0.5f,  0.0f), glm::vec3(-sqrt3 / 2.0f, -0.5f, 0.0f),
+		glm::vec3( -sqrt3,0.0f, 0.0f)
 	};
 
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
@@ -172,10 +168,7 @@ int main(int argc, char* argv[]){
 
 	for (auto& pos : pin_positions) {
 		rigidObject pin(pinMesh, true);
-		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
-		pin.getRigidBody()->setRestitution(0.1f);
-		pin.getRigidBody()->setFriction(0.3f);
-		pin.getRigidBody()->setDamping(0.1f, 0.1f);
+		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0),pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
 		objects.push_back(pin);
 	}
 
@@ -219,6 +212,7 @@ int main(int argc, char* argv[]){
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		double now = glfwGetTime();
+
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -299,13 +293,6 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 }
 
 void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
-	/*
-	c-world->performDiscreteCollisionDetection();
-	int numManifolds = c_world->getDispatcher()->getNumManifolds();
-	for (int i = 0; i < numManifolds; i++) {
-		btPersistentManifold* manifold = c_world->getDispatcher()->getManifoldByIndexInternal(i);
-		// Process each contact point in the manifold
-	}*/
 
 	btCollisionObjectArray c_obj_arr = d_world->getCollisionObjectArray();
 	MyContactResultCallback resultCallback;

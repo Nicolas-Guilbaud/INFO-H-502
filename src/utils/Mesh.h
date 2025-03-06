@@ -10,6 +10,7 @@
 #define NDEBUG
 #define CHARACTERISTIC_LEN 1.0f 
 #define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
+#define ORIENTATION glm::vec3(0.0,0.0,1.0) // pins along z-axis
 
 struct Vertex{
 	glm::vec3 position;
@@ -110,9 +111,9 @@ private:
 				}
 			}
 
+			initial_dimensions = glm::vec3(fabsf(xmax - xmin), fabsf(ymax - ymin), fabsf(zmax - zmin));
             #ifdef NDEBUG
 			std::cout << "The initial dimensions are x:[" << xmin << ", " << xmax << "] y:[" << ymin << ", " << ymax << "] z:[" << zmin << ", " << zmax << "] " << std::endl;
-			initial_dimensions = glm::vec3(fabsf(xmax - xmin), fabsf(ymax - ymin), fabsf(zmax - zmin));
 			float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 			std::cout << "The normalized dimensions are x:[" << s*xmin << ", " << s*xmax << "] y:[" << s*ymin << ", " << s*ymax << "] z:[" << s*zmin << ", " << s*zmax << "] " << std::endl;
 			#endif
@@ -180,8 +181,6 @@ private:
 		glBindVertexArray(0);
 		delete[] data;
     }
-
-
 
 public:
 
