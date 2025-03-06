@@ -1,6 +1,8 @@
 // standard C++ include files
 #include <stdio.h>
 #include <math.h>  // Required for sqrt
+#include <thread>
+#include <chrono>
 
 //include glad before GLFW to avoid header conflict or define "#define GLFW_INCLUDE_NONE"
 #include <glad/glad.h>
@@ -32,7 +34,7 @@ std::vector<Camera> theCameras = {
 	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
 	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
 };
-int camIdx = 0;
+int camIdx = 3;
 Camera camera = theCameras[camIdx];
 
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
@@ -154,7 +156,7 @@ int main(int argc, char* argv[]){
 	rigidObject ball(ballMesh, true);
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0,0.0)),glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-3.0,ballMesh.getInitialDims().y, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
 	ball.getRigidBody()->setFriction(0.0f);
@@ -165,10 +167,10 @@ int main(int argc, char* argv[]){
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
 
 	std::vector<glm::vec3> pin_positions = {
-		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f,-1.0f,  0.0f),
-		glm::vec3(sqrt3 / 2.0f,0.5f,  0.0f), glm::vec3(sqrt3 / 2.0f, 1.5f, 0.0f),
-		glm::vec3(sqrt3 / 2.0f,-0.5f,  0.0f), glm::vec3(sqrt3 / 2.0f,-1.5f,  0.0f),
-		glm::vec3(-sqrt3 / 2.0f,0.5f,  0.0f), glm::vec3(-sqrt3 / 2.0f, -0.5f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f,1.0f), glm::vec3(0.0f, 0.0f,-1.0f),
+		glm::vec3(sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(sqrt3 / 2.0f, 0.0f,1.5f),
+		glm::vec3(sqrt3 / 2.0f,0.0f ,-0.5f), glm::vec3(sqrt3 / 2.0f,  0.0f ,-1.5f),
+		glm::vec3(-sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(-sqrt3 / 2.0f,  0.0f ,-0.5f),
 		glm::vec3( -sqrt3,0.0f, 0.0f)
 	};
 
@@ -283,7 +285,10 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 
 	//Switch cameras with C
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+	{
 		switchCameras();
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
 
 }
 

@@ -24,8 +24,6 @@
 
 #ifndef OBJECT_H
 #define OBJECT_H
-#define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
-#define ORIENTATION glm::vec3(0.0,0.0,1.0) // pins along z-axis
 
 /**
  * Represents an object that can be rendered by openGL
@@ -34,13 +32,11 @@ class Object {
 protected:
 	glm::mat4 model = glm::mat4(1.0);
 	glm::mat4 inverse_transpose = model;
-	glm::mat4 permutation = glm::mat4(1.0); // needed to align the pins along z axis
 	Mesh mesh;
 private:
 public:
 
 	Object(Mesh mesh) : mesh(mesh){
-		alignAlongZ(mesh.getInitialDims());
 	}
 
 	void draw(Camera camera, Light l){
@@ -58,21 +54,6 @@ public:
 			shader.setTexture("img",0);
 		}
 		mesh.draw();
-	}
-
-	void alignAlongZ(glm::vec3 dims) {
-		if (MAX3(dims.x, dims.y, dims.z) > dims.z) {
-			if (dims.x > dims.z && dims.x > dims.y) {
-				glm::vec4 temp = permutation[0];
-				permutation[0] = permutation[2];
-				permutation[2] = temp;
-			}
-			else if (dims.y > dims.z && dims.y > dims.x) {
-				glm::vec4 temp = permutation[1];
-				permutation[1] = permutation[2];
-				permutation[2] = temp;
-			}
-		}
 	}
 	
 	void setModel(const glm::mat4& newModel) {
