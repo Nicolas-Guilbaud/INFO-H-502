@@ -34,7 +34,7 @@ std::vector<Camera> theCameras = {
 	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
 	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
 };
-int camIdx = 3;
+int camIdx = 2;
 Camera camera = theCameras[camIdx];
 
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
@@ -156,10 +156,11 @@ int main(int argc, char* argv[]){
 	rigidObject ball(ballMesh, true);
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-3.0,ballMesh.getInitialDims().y, 0.0)), glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
 	ball.getRigidBody()->setFriction(0.0f);
+	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 
 
 	objects.push_back(ball);
@@ -287,7 +288,7 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 	{
 		switchCameras();
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 }
