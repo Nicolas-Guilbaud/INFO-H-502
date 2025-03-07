@@ -34,6 +34,7 @@ private:
     int numVertices;
     std::string name;
     glm::vec3 initial_dimensions = glm::vec3(0.0);
+	glm::vec3 initial_ctr = glm::vec3(0.0);
     Shader shader;
     std::vector<Vertex> vertices;
 
@@ -112,9 +113,10 @@ private:
 			}
 
 			initial_dimensions = glm::vec3(fabsf(xmax - xmin), fabsf(ymax - ymin), fabsf(zmax - zmin));
+			initial_ctr = glm::vec3((xmax + xmin) / (2), (ymax + ymin) / (2), (zmax + zmin) / (2));
+			float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
             #ifdef NDEBUG
 			std::cout << "The initial dimensions are x:[" << xmin << ", " << xmax << "] y:[" << ymin << ", " << ymax << "] z:[" << zmin << ", " << zmax << "] " << std::endl;
-			float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 			std::cout << "The normalized dimensions are x:[" << s*xmin << ", " << s*xmax << "] y:[" << s*ymin << ", " << s*ymax << "] z:[" << s*zmin << ", " << s*zmax << "] " << std::endl;
 			#endif
 		}catch(std::ifstream::failure e){
@@ -235,4 +237,9 @@ public:
     const glm::vec3 getInitialDims() const{
         return this->initial_dimensions;
     }
+
+	const glm::vec3 getInitialCtr() const {
+		return this->initial_ctr;
+	}
+
 };

@@ -15,12 +15,14 @@ private:
 	glm::vec3 scaling = glm::vec3(1.0);
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
+	btCompoundShape* compound = new btCompoundShape(); // Wrapping the hull around the rigid body
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 
 	void setHullInit(bool isCubic) {
 		if (hull) delete hull;
 
 		hull = new btConvexHullShape();
+
 
 		if (isCubic) {
 			btVector3 halfExtents(mesh.getInitialDims().x * 0.5f, mesh.getInitialDims().y * 0.5f, mesh.getInitialDims().z * 0.5f);
@@ -35,7 +37,7 @@ private:
 			btVector3(halfExtents.x(),  halfExtents.y(),  halfExtents.z())
 			};
 			for (int i = 0; i < 8; i++) {
-				hull->addPoint(vertices[i]);
+				hull->addPoint(vertices[i]+btVector3(mesh.getInitialCtr().x, mesh.getInitialCtr().y, mesh.getInitialCtr().z));
 			}
 		}
 		else {
@@ -82,12 +84,13 @@ public:
 		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
 		hull->calculateLocalInertia(mass, inertia);
 
-
 		// Set up the rigid body
 		btMotionState* motionState = new btDefaultMotionState();
 		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
 		rigidBody = new btRigidBody(*rbInfo);
 		rigidBody->proceedToTransform(btTransform(rotation, position));
+
+
 
 	}
 	void setVelocity(glm::vec3 V) {

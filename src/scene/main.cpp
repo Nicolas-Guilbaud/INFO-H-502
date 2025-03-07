@@ -34,7 +34,7 @@ std::vector<Camera> theCameras = {
 	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
 	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
 };
-int camIdx = 2;
+int camIdx = 3;
 Camera camera = theCameras[camIdx];
 
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
@@ -153,14 +153,13 @@ int main(int argc, char* argv[]){
 	std::vector<rigidObject> objects;
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, true);
+	rigidObject ball(ballMesh, false);
 	glm::mat4 model = glm::mat4(1.0);
 
 	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.getRigidBody()->setFriction(0.0f);
-	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+	ball.setVelocity(glm::vec3(50.0, 0.0, 0.0));
 
 
 	objects.push_back(ball);
@@ -180,7 +179,7 @@ int main(int argc, char* argv[]){
 
 	for (auto& pos : pin_positions) {
 		rigidObject pin(pinMesh, true);
-		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0),pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
+		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
 
