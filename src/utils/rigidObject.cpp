@@ -15,12 +15,14 @@ private:
 	glm::vec3 scaling = glm::vec3(1.0);
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
-	btCompoundShape* compound = new btCompoundShape(); // Wrapping the hull around the rigid body
+	btCompoundShape* compound = new btCompoundShape(); // Offsetting the hull 
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
+	bool cubic = false;
 
 	void setHullInit(bool isCubic) {
 		if (hull) delete hull;
 
+		cubic = isCubic;
 		hull = new btConvexHullShape();
 
 
@@ -37,7 +39,7 @@ private:
 			btVector3(halfExtents.x(),  halfExtents.y(),  halfExtents.z())
 			};
 			for (int i = 0; i < 8; i++) {
-				hull->addPoint(vertices[i]+btVector3(mesh.getInitialCtr().x, mesh.getInitialCtr().y, mesh.getInitialCtr().z));
+				hull->addPoint(vertices[i]);
 			}
 		}
 		else {
@@ -51,6 +53,7 @@ private:
 
 			hull->recalcLocalAabb(); // Recalculate the bounding box
 		}
+		hull->setMargin(0.1f);
 	}
 
 public:
@@ -82,13 +85,29 @@ public:
 		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 		scaling = s * model_scale;
 		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
-		hull->calculateLocalInertia(mass, inertia);
+
+		// Define the local translation
+		btTransform localTransform;
+		localTransform.setIdentity();
+		localTransform.setOrigin(btVector3(mesh.getNormalizedCtr().x* model_scale.x, mesh.getNormalizedCtr().y* model_scale.y, mesh.getNormalizedCtr().z* model_scale.z)); // Shift the hull upward by offsetY
+
+		// Add the hull with the offset
+		compound->addChildShape(localTransform, hull);
 
 		// Set up the rigid body
 		btMotionState* motionState = new btDefaultMotionState();
-		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
-		rigidBody = new btRigidBody(*rbInfo);
-		rigidBody->proceedToTransform(btTransform(rotation, position));
+		if (cubic) {
+			compound->calculateLocalInertia(mass, inertia);
+			btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, compound, inertia);
+			rigidBody = new btRigidBody(*rbInfo);
+			rigidBody->proceedToTransform(btTransform(rotation, position));
+		}
+		else {
+			hull->calculateLocalInertia(mass, inertia);
+			btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
+			rigidBody = new btRigidBody(*rbInfo);
+			rigidBody->proceedToTransform(btTransform(rotation, position));
+		}
 
 
 

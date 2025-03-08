@@ -35,6 +35,7 @@ private:
     std::string name;
     glm::vec3 initial_dimensions = glm::vec3(0.0);
 	glm::vec3 initial_ctr = glm::vec3(0.0);
+	float scale;
     Shader shader;
     std::vector<Vertex> vertices;
 
@@ -114,10 +115,11 @@ private:
 
 			initial_dimensions = glm::vec3(fabsf(xmax - xmin), fabsf(ymax - ymin), fabsf(zmax - zmin));
 			initial_ctr = glm::vec3((xmax + xmin) / (2), (ymax + ymin) / (2), (zmax + zmin) / (2));
-			float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+			scale = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
             #ifdef NDEBUG
-			std::cout << "The initial dimensions are x:[" << xmin << ", " << xmax << "] y:[" << ymin << ", " << ymax << "] z:[" << zmin << ", " << zmax << "] " << std::endl;
-			std::cout << "The normalized dimensions are x:[" << s*xmin << ", " << s*xmax << "] y:[" << s*ymin << ", " << s*ymax << "] z:[" << s*zmin << ", " << s*zmax << "] " << std::endl;
+			std::cout << "The initial dimensions are x: " << initial_dimensions.x << " y: " << initial_dimensions.y << " z: " << initial_dimensions.z<< std::endl;
+			std::cout << "The normalized dimensions are x: " << initial_dimensions.x * scale << " y: " << initial_dimensions.y * scale << " z: " << initial_dimensions.z * scale << std::endl;
+			std::cout << "The normalized center is x: " << initial_ctr.x * scale << " y: " << initial_ctr.y * scale << " z: " << initial_ctr.z * scale << std::endl;
 			#endif
 		}catch(std::ifstream::failure e){
 			std::cout << "ERROR READING '" << path << "' OBJ FILE:\n" << e.what() << std::endl;
@@ -241,5 +243,14 @@ public:
 	const glm::vec3 getInitialCtr() const {
 		return this->initial_ctr;
 	}
+
+	const glm::vec3 getNormalizedDims() const {
+		return this->initial_dimensions*scale;
+	}
+
+	const glm::vec3 getNormalizedCtr() const {
+		return this->initial_ctr*scale;
+	}
+
 
 };
