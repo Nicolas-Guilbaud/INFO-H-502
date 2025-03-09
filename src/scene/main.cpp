@@ -21,6 +21,8 @@
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
 
+#include "../utils/Fresnel.h"
+
 const int width = 500;
 const int height = 500;
 
@@ -147,20 +149,31 @@ int main(int argc, char* argv[]){
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
 	
-	//Setting up the cameras
-
 	//Creating the objects
 	std::vector<rigidObject> objects;
+	
+	Fresnel F(PATH_TO_OTHERS "/Fresnel.txt");
+	std::vector<std::string> material_List = F.getMaterialList();
+
+	#ifndef NDEBUG
+	for (const auto& mat : material_List) {
+		glm::vec3 fresnel = F.getFresnelValue(mat); // Avoid redundant calls
+
+		std::cout << "Material available: " << mat
+			<< " | Associated Fresnel Reflectances: ("
+			<< fresnel.x << ", " << fresnel.y << ", " << fresnel.z << ")"
+			<< std::endl;
+	}
+	#endif
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, true);
+	rigidObject ball(ballMesh, true, F.getFresnelValue(material_List[0]));
 	glm::mat4 model = glm::mat4(1.0);
 
 	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.setVelocity(glm::vec3(20.0, 0.0, 0.0));
-
+	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 
 	objects.push_back(ball);
 
@@ -178,7 +191,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true);
+		rigidObject pin(pinMesh, true, F.getFresnelValue(material_List[0]));
 		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
@@ -199,8 +212,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld);
 
-	const Light l(glm::vec3(1.0, 2.0, 2.0));
-	
+	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(1.0,0.0,1.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function

@@ -33,10 +33,11 @@ protected:
 	glm::mat4 model = glm::mat4(1.0);
 	glm::mat4 inverse_transpose = model;
 	Mesh mesh;
+	glm::vec3 F0;
 private:
 public:
 
-	Object(Mesh mesh) : mesh(mesh){
+	Object(Mesh mesh, glm::vec3 F0) :F0(F0), mesh(mesh){
 	}
 
 	void draw(Camera camera, Light l){
@@ -49,6 +50,8 @@ public:
 		shader.setMatrix4("itM", inverse_transpose);
 		shader.setVector3f("u_view_pos", camera.Position);
 		shader.setVector3f("u_light_pos", l.position);
+		shader.setVector3f("F0", F0);
+		shader.setVector3f("light_spectrum", l.spectrum);
 
 		if(mesh.hasTexture()){
 			shader.setTexture("img",0);

@@ -57,7 +57,7 @@ private:
 	}
 
 public:
-	rigidObject(Mesh mesh, bool isCubic) : Object(mesh) { // constructor
+	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0) : Object(mesh, F0) { // constructor
 		setHullInit(isCubic);
 	}
 
