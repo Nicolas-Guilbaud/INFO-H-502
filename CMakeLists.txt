@@ -49,6 +49,7 @@ link_libraries(
 add_compile_definitions(PATH_TO_MESHES="${CMAKE_CURRENT_SOURCE_DIR}/resources/meshes")
 add_compile_definitions(PATH_TO_TEXTURES="${CMAKE_CURRENT_SOURCE_DIR}/resources/textures")
 add_compile_definitions(PATH_TO_SHADERS="${CMAKE_CURRENT_SOURCE_DIR}/src/shaders")
+add_compile_definitions(PATH_TO_OTHERS="${CMAKE_CURRENT_SOURCE_DIR}/resources/others")
 
 # Compilation
 
