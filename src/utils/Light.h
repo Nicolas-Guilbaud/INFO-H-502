@@ -5,5 +5,6 @@
 class Light{
 public:
     glm::vec3 position;
-    Light(glm::vec3 position) : position(position){}
+    glm::vec3 spectrum;
+    Light(glm::vec3 position, glm::vec3 spectrum) : position(position), spectrum(spectrum){}
 };
