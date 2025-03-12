@@ -5,12 +5,12 @@
     - [x] create the project with the basic structure (CMAKE, etc)
     - [x] create a basic scene with a cube
 - [ ] Physics
-    - [ ] Mecanic system
+    - [x] Mecanic system
     - [x] Collision detection
     - [ ] Light
 - [ ] File loading
     - [x] Load a mesh
-    - [ ] Load a texture
+    - [x] Load a texture
     - [x] Load a shader
     - [ ] Load the entire scene
 - [ ] Interactions:
@@ -100,11 +100,93 @@ Risque sur les prochaines tâches: l'adhérence au sol
 # Réunion 27/02/2025
 
 ## Objectifs
-- Restructurer le code orienté objet, plus particulièrement la classe object.h qui doit être scindée en sous-classes
+
+- [x] Restructurer le code orienté objet, plus particulièrement la classe object.h qui doit être scindée en sous-classes
 - Nicolas:
-  - [ ] ajouter le cubemap
+  - [x] ajouter le cubemap
 
 - Loup:
-  - [ ] régler problème de framerate
-  - [ ] régler interactions quilles-sol
-  
+  - [x] régler problème de framerate
+  - [x] régler interactions quilles-sol
+
+## Résumé
+
+Les hitbox des quilles sont désormais cubiques  
+-> tester avec des hitbox cylindriques
+
+Cela a également réglé les problèmes de framerate
+
+Le cubemap a été ajouté sur une autre branche (doit être merged)
+
+Fcts basiques qu'il reste à implémenter:
+
+- Game logic:
+  - choix direction + force
+- plusieurs caméras statiques (en + de la caméra libre)
+- réflection/refraction
+
+Avant de continuer les lumières, il a été convenu de lire le chapitre 9
+et d'en faire un résumé pour préparer la défense orale
+
+# Réunion 06/03/2025
+
+## Objectifs
+
+- [x] Lecture Chapitre 9
+
+Loup:
+    - [ ] Revoir les labos (FBO, lumières, textures)
+    - [x] Setup les caméras (1 libre, plusieurs statiques)
+Nicolas:
+    - [ ] Textures: sol, cubemap
+    - [ ] Game logic
+
+## Résumé
+- Début du chapitre 9 lu par Nicolas (jusque 9.5) et survolé par Loup (9.3, 9.4) qui souhaite aller à l'essentiel étant donné les instructions vagues du professeur
+
+Loup:
+    - Trop ambitieux de refaire tous les labos en une semaine. Système de 4 caméras set up dont une amovible. 
+Nicolas:
+    - Pas eu le temps de réfléchir à l'implémentation de la Game logic de manière substantielle. A dégoté un mesh d'une 100aine d'objets représenatant un complexe de loisir avec des pistes de bowling. 
+
+# Réunion 13/03/2025
+
+## Objectifs
+
+- [ ] Lecture ciblée du Chapitre 9 au vu de programmer les shaders d'ici à la fin du mois. En particulier , ceux sur la microgeometry (9.6), la reflectance (9.5) et la BRDF for surface reflection (9.8).
+
+Loup: 
+    - [x] Régler bug de désaccord entre hitbox et rendered mesh
+Nicolas:
+    - [ ] Implémentation d'un mesh texturisé pour le sol
+    - [ ] Implémentation de la cubemap
+
+## Résumé (12/03/2025)
+
+Lecture du chapitre 9:
+
+- 9.6: pas beaucoup de contenu
+- 9.8: besoin de lire la section 9.7 pour comprendre d'où vient l'équation
+
+implémentation de la section 9.5 (réflectance Fresnel) par Loup
+
+Problème de boule de bowling buguée  
+-> résolu en ajoutant un offset dans la hitbox
+
+Quilles oscillent à nouveau  
+-> dû à l'inertie
+
+# Réunion 19/03/2025
+
+## objectifs
+
+Loup: 
+  - [ ] Lancer de la balle
+  - [ ] Game logic
+  - [ ] Régler l'oscillation des quilles (à voir si c'est réglé avec le sol)
+  - [ ] Ecriture Fresnel dans le rapport
+Nicolas:
+  - [ ] Chap 9.8
+    - [ ] Implémentation
+    - [ ] Ecriture dans le rapport
+  - [ ] Mirroir FBO

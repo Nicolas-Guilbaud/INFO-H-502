@@ -1,6 +1,8 @@
 // standard C++ include files
 #include <stdio.h>
 #include <math.h>  // Required for sqrt
+#include <thread>
+#include <chrono>
 
 //include glad before GLFW to avoid header conflict or define "#define GLFW_INCLUDE_NONE"
 #include <glad/glad.h>
@@ -20,6 +22,8 @@
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
 
+#include "../utils/Fresnel.h"
+
 const int width = 500;
 const int height = 500;
 
@@ -27,11 +31,21 @@ bool firstMouse = true;
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
 
-Camera camera(glm::vec3(0.0, 0.0, 0.1));
-void processKeyInput(GLFWwindow* window);
+std::vector<Camera> theCameras = {
+	Camera(glm::vec3(0.0f, 10.0f, 2.0f),glm::vec3(0.0,0.25,-1.0),-90.0,-75.0, false),
+	Camera(glm::vec3(3.75f, 8.6f, 8.4f), glm::vec3(-0.3, 0.82, -0.5), -125.0, -35.0, false),
+	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
+	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
+};
+int camIdx = 1;
+Camera camera = theCameras[camIdx];
+
+void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world);
+void switchCameras();
+
 
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -140,47 +154,50 @@ int main(int argc, char* argv[]){
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
 	
-
 	//Creating the objects
 	std::vector<rigidObject> objects;
+	
+	Fresnel F(PATH_TO_OTHERS "/Fresnel.txt");
+	std::vector<std::string> material_List = F.getMaterialList();
 
-	glm::mat3 permutation = glm::mat3(1.0);
-	glm::vec3 temp = permutation[1];
-	permutation[1] = permutation[2];
-	permutation[2] = temp;
+	#ifndef NDEBUG
+	for (const auto& mat : material_List) {
+		glm::vec3 fresnel = F.getFresnelValue(mat); // Avoid redundant calls
+
+		std::cout << "Material available: " << mat
+			<< " | Associated Fresnel Reflectances: ("
+			<< fresnel.x << ", " << fresnel.y << ", " << fresnel.z << ")"
+			<< std::endl;
+	}
+	#endif
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh);
+	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"));
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, permutation*glm::vec3(-150.0,0.0,0.0)),glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-30.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.getRigidBody()->setDamping(0.0f, 0.0f);
-	ball.getRigidBody()->setFriction(0.0f);
-	ball.setVelocity(permutation * glm::vec3(50.0, 0.0, 0.0));
+	ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
 
 	objects.push_back(ball);
 
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
 
 	std::vector<glm::vec3> pin_positions = {
-		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
-		glm::vec3(0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(1.5f, sqrt3 / 2.0f, 0.0f),
-		glm::vec3(-0.5f, sqrt3 / 2.0f, 0.0f), glm::vec3(-1.5f, sqrt3 / 2.0f, 0.0f),
-		glm::vec3(0.5f, -sqrt3 / 2.0f, 0.0f), glm::vec3(-0.5f, -sqrt3 / 2.0f, 0.0f),
-		glm::vec3(0.0f, -sqrt3, 0.0f)
+		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f,1.0f), glm::vec3(0.0f, 0.0f,-1.0f),
+		glm::vec3(sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(sqrt3 / 2.0f, 0.0f,1.5f),
+		glm::vec3(sqrt3 / 2.0f,0.0f ,-0.5f), glm::vec3(sqrt3 / 2.0f,  0.0f ,-1.5f),
+		glm::vec3(-sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(-sqrt3 / 2.0f,  0.0f ,-0.5f),
+		glm::vec3( -sqrt3,0.0f, 0.0f)
 	};
 
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh);
-		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), permutation*pos), glm::vec3(1.5, 1.5, 1.5)),1.0);
-		pin.getRigidBody()->setRestitution(0.1f);
-		pin.getRigidBody()->setFriction(0.3f);
-		pin.getRigidBody()->setDamping(0.1f, 0.1f);
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"));
+		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
 
@@ -200,8 +217,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld);
 
-	const Light l(glm::vec3(1.0, 2.0, 2.0));
-	
+	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(1.0,1.0,1.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
@@ -224,10 +240,11 @@ int main(int argc, char* argv[]){
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		double now = glfwGetTime();
+
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		processKeyInput(window);
+		processKeyInput(window, ball);
 
 		glDepthFunc(GL_LEQUAL);
 		cubemapObj.draw(camera,l);
@@ -257,7 +274,7 @@ int main(int argc, char* argv[]){
 
 }
 
-void processKeyInput(GLFWwindow* window) {
+void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -282,6 +299,18 @@ void processKeyInput(GLFWwindow* window) {
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboardMovement(DOWN, 0.1);
+
+	//Launch ball with enter 
+	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
+		ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+
+	//Switch cameras with C
+	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+	{
+		switchCameras();
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
 }
 
 /* Motivated student can implement the rotation using the mouse
@@ -308,13 +337,6 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 }
 
 void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
-	/*
-	c-world->performDiscreteCollisionDetection();
-	int numManifolds = c_world->getDispatcher()->getNumManifolds();
-	for (int i = 0; i < numManifolds; i++) {
-		btPersistentManifold* manifold = c_world->getDispatcher()->getManifoldByIndexInternal(i);
-		// Process each contact point in the manifold
-	}*/
 
 	btCollisionObjectArray c_obj_arr = d_world->getCollisionObjectArray();
 	MyContactResultCallback resultCallback;
@@ -341,8 +363,12 @@ void addGround(btDynamicsWorld* d_world) {
 	// Set mass to 0 (static object)
 	btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0, groundMotionState, groundShape, btVector3(0, 0, 0));
 	btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
-	groundRigidBody->setRestitution(0.1f);
+	groundRigidBody->setRestitution(0.5f);
 
 	// Add to the dynamics world
 	d_world->addRigidBody(groundRigidBody);
+}
+
+void switchCameras() {
+	camera = theCameras[(++camIdx) % theCameras.size()];
 }
