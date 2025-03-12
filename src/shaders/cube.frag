@@ -27,6 +27,6 @@ void main() {
     float spec = pow(max(cosTheta,0.0), shininess); 
     float specular = spec_strength * spec;
     // FragColor = texture(img,tex_coord);
-    vec3 F = F0 + (vec3(1)-F0)*pow((1-dot(N,L)),5); // Schlick's approximation
+    vec3 F = F0 + (vec3(1)-F0)*pow((1-max(dot(N,L),0)),5); // Schlick's approximation
     FragColor = vec4(color+vec3(specular), 1.0)*vec4(light_spectrum, 1.0)*vec4(F, 1.0)*texture(img,tex_coord);
 }
