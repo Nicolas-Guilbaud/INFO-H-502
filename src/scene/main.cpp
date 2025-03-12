@@ -36,7 +36,7 @@ std::vector<Camera> theCameras = {
 	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
 	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
 };
-int camIdx = 2;
+int camIdx = 1;
 Camera camera = theCameras[camIdx];
 
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
@@ -167,13 +167,13 @@ int main(int argc, char* argv[]){
 	#endif
 
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, true, F.getFresnelValue(material_List[0]));
+	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"));
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-30.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+	ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
 
 	objects.push_back(ball);
 
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue(material_List[0]));
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"));
 		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld);
 
-	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(1.0,0.0,1.0));	
+	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(1.0,1.0,1.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
