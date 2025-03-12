@@ -5,7 +5,7 @@
     - [x] create the project with the basic structure (CMAKE, etc)
     - [x] create a basic scene with a cube
 - [ ] Physics
-    - [ ] Mecanic system
+    - [x] Mecanic system
     - [x] Collision detection
     - [ ] Light
 - [ ] File loading
@@ -156,8 +156,37 @@ Nicolas:
 - [ ] Lecture ciblée du Chapitre 9 au vu de programmer les shaders d'ici à la fin du mois. En particulier , ceux sur la microgeometry (9.6), la reflectance (9.5) et la BRDF for surface reflection (9.8).
 
 Loup: 
-    - [ ] Régler bug de désaccord entre hitbox et rendered mesh
+    - [x] Régler bug de désaccord entre hitbox et rendered mesh
 Nicolas:
     - [ ] Implémentation d'un mesh texturisé pour le sol
     - [ ] Implémentation de la cubemap
 
+## Résumé (12/03/2025)
+
+Lecture du chapitre 9:
+
+- 9.6: pas beaucoup de contenu
+- 9.8: besoin de lire la section 9.7 pour comprendre d'où vient l'équation
+
+implémentation de la section 9.5 (réflectance Fresnel) par Loup
+
+Problème de boule de bowling buguée  
+-> résolu en ajoutant un offset dans la hitbox
+
+Quilles oscillent à nouveau  
+-> dû à l'inertie
+
+# Réunion 19/03/2025
+
+## objectifs
+
+Loup: 
+  - [ ] Lancer de la balle
+  - [ ] Game logic
+  - [ ] Régler l'oscillation des quilles (à voir si c'est réglé avec le sol)
+  - [ ] Ecriture Fresnel dans le rapport
+Nicolas:
+  - [ ] Chap 9.8
+    - [ ] Implémentation
+    - [ ] Ecriture dans le rapport
+  - [ ] Mirroir FBO
