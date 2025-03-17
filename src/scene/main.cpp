@@ -201,6 +201,16 @@ int main(int argc, char* argv[]){
 		objects.push_back(pin);
 	}
 
+	//ground
+	GLuint groundTex = loadTexture(PATH_TO_TEXTURES "/ground.jpg");
+	Mesh groundMesh(PATH_TO_MESHES "/sol.obj",shader,groundTex);
+	Object ground(groundMesh,F.getFresnelValue("iron"));
+	glm::mat4 groundModel = glm::mat4(1);
+	groundModel = glm::translate(model,glm::vec3(0,-1,0));
+	ground.setModel(groundModel);
+
+
+
 	//Initializing the dynamic collision world
 	btDefaultCollisionConfiguration* collisionConfig = new btDefaultCollisionConfiguration();
 	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfig);
@@ -254,6 +264,7 @@ int main(int argc, char* argv[]){
 			o.draw(camera,l);
 		}
 
+		ground.draw(camera,l);
 
 		glfwSwapBuffers(window);
 
