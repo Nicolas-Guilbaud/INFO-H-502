@@ -57,7 +57,7 @@ private:
 	}
 
 public:
-	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0) : Object(mesh, F0) { // constructor
+	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0 = glm::vec3(1.0)) : Object(mesh, F0) { // constructor
 		setHullInit(isCubic);
 	}
 
@@ -115,6 +115,10 @@ public:
 	void setVelocity(glm::vec3 V) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		rigidBody->setLinearVelocity(btVector3(V.x, V.y, V.z));
+	}
+	void setGravity(glm::vec3 V) {
+		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
+		rigidBody->setGravity(btVector3(V.x, V.y, V.z));
 	}
 
 	void draw(Camera c, Light l) {
