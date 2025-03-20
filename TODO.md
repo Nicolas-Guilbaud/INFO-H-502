@@ -176,7 +176,7 @@ Problème de boule de bowling buguée
 Quilles oscillent à nouveau  
 -> dû à l'inertie
 
-# Réunion 19/03/2025
+# Réunion 20/03/2025
 
 ## objectifs
 
@@ -201,7 +201,7 @@ Loup:
     - un peu écrit dans le rapport
     - a ajouté la reflection et la refraction malgré meshes mal rendues
 
-# Réunion 20/03/2025
+# Réunion 27/03/2025
 
 ## objectifs
 
