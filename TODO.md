@@ -158,8 +158,8 @@ Nicolas:
 Loup: 
     - [x] Régler bug de désaccord entre hitbox et rendered mesh
 Nicolas:
-    - [ ] Implémentation d'un mesh texturisé pour le sol
-    - [ ] Implémentation de la cubemap
+    - [x] Implémentation d'un mesh texturisé pour le sol
+    - [x] Implémentation de la cubemap
 
 ## Résumé (12/03/2025)
 

@@ -62,6 +62,26 @@ public:
 		model = newModel;
 		inverse_transpose = glm::inverse(glm::transpose(model));
 	}
+	
+	void translateModel(glm::vec3 translation){
+		model = glm::translate(model, translation);
+	}
+
+	void translateModel(float x, float y, float z){
+		this->translateModel(glm::vec3(x,y,z));
+	}
+
+	void rotateModel(float angle, glm::vec3 axle){
+		model = glm::rotate(model,glm::radians(angle),axle);
+	}
+
+	void scaleModel(float x, float y, float z){
+		this->scaleModel(glm::vec3(x,y,z));
+	}
+
+	void scaleModel(glm::vec3 scaling){
+		glm::scale(model,scaling);
+	}
 
 	const glm::mat4& getModel() {
 		return model;

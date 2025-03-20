@@ -22,7 +22,11 @@
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
 
+#include "../objects/MirrorFace.cpp"
+
 #include "../utils/Fresnel.h"
+
+#define PRINT_VEC3(vec) "(" << vec.x << "," << vec.y << "," << vec.z << ")"
 
 const int width = 500;
 const int height = 500;
@@ -39,7 +43,9 @@ std::vector<Camera> theCameras = {
 };
 int camIdx = 1;
 Camera camera = theCameras[camIdx];
+MirrorFace* mirror;
 
+void windowResizeCallback(GLFWwindow* window, int width, int height);
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
@@ -125,7 +131,12 @@ int main(int argc, char* argv[]){
 	glfwMakeContextCurrent(window);
 	/* Motivated student can implement the rotation using the mouse */
 	glfwSetCursorPosCallback(window, mouseCallback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); //GLFW_CURSOR_DISABLED
+	glfwSetWindowSizeCallback(window,windowResizeCallback);
+	#ifndef NDEBUG
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); //GLFW_CURSOR_DISABLED
+	#else
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	#endif
 	//load openGL function
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -205,9 +216,15 @@ int main(int argc, char* argv[]){
 	GLuint groundTex = loadTexture(PATH_TO_TEXTURES "/ground.jpg");
 	Mesh groundMesh(PATH_TO_MESHES "/sol.obj",shader,groundTex);
 	Object ground(groundMesh,F.getFresnelValue("iron"));
-	glm::mat4 groundModel = glm::mat4(1);
-	groundModel = glm::translate(model,glm::vec3(0,-1,0));
-	ground.setModel(groundModel);
+	ground.translateModel(0,-1,0);
+
+	Mesh mirrorMesh(PATH_TO_MESHES "/mirror.obj",shader);
+	mirror = new MirrorFace(width,height);
+	mirror->scaleModel(5.0,5.0,5.0);
+	mirror->translateModel(5.0,1.0,0.0);
+	mirror->rotateModel(-90,glm::vec3(0,1,0));
+
+
 
 
 
@@ -227,7 +244,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld);
 
-	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(1.0,1.0,1.0));	
+	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(2.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
@@ -251,6 +268,26 @@ int main(int argc, char* argv[]){
 		glfwPollEvents();
 		double now = glfwGetTime();
 
+		//Mirror texture rendering
+		Camera trueState = camera; //keep true camera state
+		mirror->placeCamera(&camera); //setup camera for mirror rendering
+		mirror->beginMirrorRendering();
+
+		glDepthFunc(GL_LEQUAL);
+		cubemapObj.draw(camera,l);
+		glDepthFunc(GL_LESS);
+		// draw objects
+		for (rigidObject o : objects) {
+			o.draw(camera,l);
+		}
+
+		ground.draw(camera,l);
+
+		mirror->endMirrorRendering();
+		camera = trueState;
+
+		//main rendering
+
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -265,6 +302,7 @@ int main(int argc, char* argv[]){
 		}
 
 		ground.draw(camera,l);
+		mirror->draw(camera,l);
 
 		glfwSwapBuffers(window);
 
@@ -277,12 +315,18 @@ int main(int argc, char* argv[]){
 		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
 	}
 
+	delete mirror;
+
 	//clean up ressource
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
 	return 0;
 
+}
+
+void windowResizeCallback(GLFWwindow* window, int width, int height){
+	glViewport(0,0,width,height);
 }
 
 void processKeyInput(GLFWwindow* window, rigidObject& ball) {
@@ -315,12 +359,29 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
 		ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 
-	//Switch cameras with C
+	//Switch cameras with TAB
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 	{
 		switchCameras();
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
+
+	#ifndef NDEBUG
+	//Debug MirrorFace operations on the camera
+	if(glfwGetKey(window,GLFW_KEY_T) == GLFW_PRESS){
+		glm::vec3 oldP = camera.Position;
+		std::cout << "Reverting camera !" << std::endl
+		<< "Old cam pos:" << PRINT_VEC3(camera.Position) << std::endl
+		<< "\t pitch: " << camera.Pitch << ", Yaw: " << camera.Yaw << std::endl
+		<< "mirror pos:" << PRINT_VEC3(mirror->getPosition()) << std::endl;
+
+		mirror->placeCamera(&camera);
+
+		std::cout << "New cam pos: " << PRINT_VEC3(camera.Position) << std::endl
+		<< "\t pitch: " << camera.Pitch << ", Yaw: " << camera.Yaw << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	}
+	#endif
 
 }
 
