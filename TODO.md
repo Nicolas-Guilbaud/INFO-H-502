@@ -184,9 +184,34 @@ Loup:
   - [ ] Lancer de la balle
   - [ ] Game logic
   - [ ] Régler l'oscillation des quilles (à voir si c'est réglé avec le sol)
-  - [ ] Ecriture Fresnel dans le rapport
+  - [x] Ecriture Fresnel dans le rapport
 Nicolas:
   - [ ] Chap 9.8
     - [ ] Implémentation
     - [ ] Ecriture dans le rapport
-  - [ ] Mirroir FBO
+  - [x] Mirroir FBO
+
+## résumé
+
+Nicolas:
+    - pas eu l'occasion de travailler sur le chap. 9.8 car malade
+    - implémentation d'un mirroir dans une branche séparée à l'aide d'un FBO
+    - ajout de fonctions utilitaires pour manipuler les modèles d'objets
+Loup:
+    - un peu écrit dans le rapport
+    - a ajouté la reflection et la refraction malgré meshes mal rendues
+
+# Réunion 20/03/2025
+
+## objectifs
+
+[ ] Merge branche mirroir et refactor du code (reflectable et refractable object classes, régler duplication du rendering ds main, modifier constructeur du rigidObject et appeler setRigidObject en privé) 
+
+Nicolas:
+    - [ ] documentation au vu d'implémenter le physically-based rendering (specular reflection) d'ici au 03/04
+
+Loup: 
+    - [ ] régler reflection/ refraction sur meshes fonctionnelles
+    - [ ] hitbox sphérique pour la balle de bowling
+    - [ ] réflechir à la game logic au vu de son implémentation d'ici au 03/04
+
