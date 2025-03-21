@@ -55,12 +55,6 @@ private:
 		}
 		hull->setMargin(0.1f);
 	}
-
-public:
-	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0 = glm::vec3(1.0)) : Object(mesh, F0) { // constructor
-		setHullInit(isCubic);
-	}
-
 	void setRigidBody(const glm::mat4& nextModel, float m) { // set the RigidBody in the world coordinates according to nextModel
 		if (rigidBody) delete rigidBody;
 
@@ -89,7 +83,7 @@ public:
 		// Define the local translation
 		btTransform localTransform;
 		localTransform.setIdentity();
-		localTransform.setOrigin(btVector3(mesh.getNormalizedCtr().x* model_scale.x, mesh.getNormalizedCtr().y* model_scale.y, mesh.getNormalizedCtr().z* model_scale.z)); // Shift the hull upward by offsetY
+		localTransform.setOrigin(btVector3(mesh.getNormalizedCtr().x * model_scale.x, mesh.getNormalizedCtr().y * model_scale.y, mesh.getNormalizedCtr().z * model_scale.z)); // Shift the hull upward by offsetY
 
 		// Add the hull with the offset
 		compound->addChildShape(localTransform, hull);
@@ -108,10 +102,15 @@ public:
 			rigidBody = new btRigidBody(*rbInfo);
 			rigidBody->proceedToTransform(btTransform(rotation, position));
 		}
-
-
-
 	}
+
+public:
+	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0 = glm::vec3(1.0), const glm::mat4& nextModel = glm::mat4(1.0), float m = 1.0) : Object(mesh, F0) { // constructor
+		setHullInit(isCubic);
+		setRigidBody(nextModel, m);
+	}
+
+	
 	void setVelocity(glm::vec3 V) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		rigidBody->setLinearVelocity(btVector3(V.x, V.y, V.z));

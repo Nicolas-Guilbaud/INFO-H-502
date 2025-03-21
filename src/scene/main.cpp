@@ -18,12 +18,12 @@
 #include "../utils/shader.h"
 #include "../objects/object.h"
 #include "../objects/rigidObject.cpp"
+#include "../objects/reflectableObject.cpp"
+#include "../objects/refractableObject.cpp"
 #include "../objects/Cubemap.cpp"
 #include "../collisions/MyContactResultCallback.cpp"
 #include "../utils/Texture.h"
-
 #include "../objects/MirrorFace.cpp"
-
 #include "../utils/Fresnel.h"
 
 #define PRINT_VEC3(vec) "(" << vec.x << "," << vec.y << "," << vec.z << ")"
@@ -183,14 +183,13 @@ int main(int argc, char* argv[]){
 	#endif
 
 	//bowling ball
-	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"));
 	glm::mat4 model = glm::mat4(1.0);
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
+	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
+	rigidObject ball(ballMesh, true, F.getFresnelValue("iron"), model, 10.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
-	
-	ball.setRigidBody(model, 10.0);
-	ball.setVelocity(glm::vec3(20.0, 0.0, 0.0));
+	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+	ball.getRigidBody()->setFriction(0.0);
 
 	objects.push_back(ball);
 
@@ -209,8 +208,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"));
-		pin.setRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
 
@@ -230,7 +228,7 @@ int main(int argc, char* argv[]){
 	// reflecting sphere
 	Shader shader_reflect(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/reflect.frag");
 	Mesh reflectSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_reflect, false);
-	Object reflectSphere(reflectSphereMesh);
+	reflectableObject reflectSphere(reflectSphereMesh);
 	glm::mat4 rectSphModel = glm::mat4(1);
 	rectSphModel = glm::scale(glm::translate(model, glm::vec3(-30, 25, 0)),glm::vec3(10.0));
 	reflectSphere.setModel(rectSphModel);
@@ -238,7 +236,7 @@ int main(int argc, char* argv[]){
 	// refracting sphere
 	Shader shader_refract(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/refract.frag");
 	Mesh refractSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_refract, false);
-	Object refractSphere(refractSphereMesh);
+	refractableObject refractSphere(refractSphereMesh);
 	glm::mat4 ractSphModel = glm::mat4(1);
 	ractSphModel = glm::scale(glm::translate(model, glm::vec3(30, 25, 0)), glm::vec3(10.0));
 	refractSphere.setModel(ractSphModel);
@@ -310,8 +308,8 @@ int main(int argc, char* argv[]){
 
 		glDepthFunc(GL_LEQUAL);
 		cubemapObj.draw(camera,l);
-		refractSphere.drawRefract(camera, l, 1.33f, cubemapTex);
-		reflectSphere.drawReflect(camera, l, cubemapTex);
+		refractSphere.draw(camera, l, cubemapTex, 1.33f);
+		reflectSphere.draw(camera, l, cubemapTex);
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject o : objects) {
