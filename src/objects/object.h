@@ -36,7 +36,7 @@ protected:
 private:
 public:
 
-	Object(Mesh mesh, glm::vec3 F0) :F0(F0), mesh(mesh){
+	Object(Mesh mesh, glm::vec3 F0=glm::vec3(1.0)) :F0(F0), mesh(mesh){
 	}
 
 	void draw(Camera camera, Light l){
@@ -55,7 +55,41 @@ public:
 		if(mesh.hasTexture()){
 			shader.setTexture("img",0);
 		}
+
 		mesh.draw();
+	}
+
+	void drawReflect(Camera camera, Light l, GLuint cubeMapTexture){
+		Shader shader = mesh.getShader();
+		shader.use();
+
+		shader.setMatrix4("V", camera.GetViewMatrix());
+		shader.setMatrix4("P", camera.GetProjectionMatrix());
+		shader.setMatrix4("M", model);
+		shader.setMatrix4("itM", inverse_transpose);
+		shader.setVector3f("u_view_pos", camera.Position);
+		glDepthMask(GL_FALSE);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+		mesh.draw();
+		glDepthMask(GL_TRUE);
+	}
+
+	void drawRefract(Camera camera, Light l, float refractIndice, GLuint cubeMapTexture){
+		Shader shader = mesh.getShader();
+		shader.use();
+
+		shader.setMatrix4("V", camera.GetViewMatrix());
+		shader.setMatrix4("P", camera.GetProjectionMatrix());
+		shader.setMatrix4("M", model);
+		shader.setMatrix4("itM", inverse_transpose);
+		shader.setVector3f("u_view_pos", camera.Position);
+		shader.setFloat("refractionIndice", refractIndice);
+		glDepthMask(GL_FALSE);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+		mesh.draw();
+		glDepthMask(GL_TRUE);
 	}
 	
 	void setModel(const glm::mat4& newModel) {
@@ -80,7 +114,7 @@ public:
 	}
 
 	void scaleModel(glm::vec3 scaling){
-		glm::scale(model,scaling);
+		model = glm::scale(model,scaling);
 	}
 
 	const glm::mat4& getModel() {
@@ -89,6 +123,12 @@ public:
 
 	const glm::mat4& getInverseTranspose() {
 		return inverse_transpose;
+	}
+	const glm::vec3& getInitialDimensions() {
+		return mesh.getInitialDims();
+	}
+	const glm::vec3& getInitialCenter() {
+		return mesh.getInitialCtr();
 	}
 };
 #endif

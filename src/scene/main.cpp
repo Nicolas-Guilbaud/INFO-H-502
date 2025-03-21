@@ -49,7 +49,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height);
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
-void addGround(btDynamicsWorld* d_world);
+void addGround(btDynamicsWorld* d_world, Object grd);
 void switchCameras();
 
 
@@ -182,17 +182,19 @@ int main(int argc, char* argv[]){
 	}
 	#endif
 
+	//bowling ball
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"));
 	glm::mat4 model = glm::mat4(1.0);
 
-	model = glm::scale(glm::translate(model, glm::vec3(-30.0,0.0, 0.0)), glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0,0.0, 0.0)), glm::vec3(1.0));
 	
 	ball.setRigidBody(model, 10.0);
-	ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+	ball.setVelocity(glm::vec3(20.0, 0.0, 0.0));
 
 	objects.push_back(ball);
 
+	// bowling pins
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
 
 	std::vector<glm::vec3> pin_positions = {
@@ -215,7 +217,7 @@ int main(int argc, char* argv[]){
 	//ground
 	GLuint groundTex = loadTexture(PATH_TO_TEXTURES "/ground.jpg");
 	Mesh groundMesh(PATH_TO_MESHES "/sol.obj",shader,groundTex);
-	Object ground(groundMesh,F.getFresnelValue("iron"));
+	Object ground(groundMesh);
 	ground.translateModel(0,-1,0);
 
 	Mesh mirrorMesh(PATH_TO_MESHES "/mirror.obj",shader);
@@ -225,8 +227,21 @@ int main(int argc, char* argv[]){
 	mirror->rotateModel(-90,glm::vec3(0,1,0));
 
 
+	// reflecting sphere
+	Shader shader_reflect(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/reflect.frag");
+	Mesh reflectSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_reflect, false);
+	Object reflectSphere(reflectSphereMesh);
+	glm::mat4 rectSphModel = glm::mat4(1);
+	rectSphModel = glm::scale(glm::translate(model, glm::vec3(-30, 25, 0)),glm::vec3(10.0));
+	reflectSphere.setModel(rectSphModel);
 
-
+	// refracting sphere
+	Shader shader_refract(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/refract.frag");
+	Mesh refractSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_refract, false);
+	Object refractSphere(refractSphereMesh);
+	glm::mat4 ractSphModel = glm::mat4(1);
+	ractSphModel = glm::scale(glm::translate(model, glm::vec3(30, 25, 0)), glm::vec3(10.0));
+	refractSphere.setModel(ractSphModel);
 
 	//Initializing the dynamic collision world
 	btDefaultCollisionConfiguration* collisionConfig = new btDefaultCollisionConfiguration();
@@ -242,7 +257,7 @@ int main(int argc, char* argv[]){
 		dynamicsWorld->addRigidBody(obj.getRigidBody());
 	}
 
-	addGround( dynamicsWorld);
+	addGround( dynamicsWorld, ground);
 
 	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(2.0));	
 	double prev = 0;
@@ -295,6 +310,8 @@ int main(int argc, char* argv[]){
 
 		glDepthFunc(GL_LEQUAL);
 		cubemapObj.draw(camera,l);
+		refractSphere.drawRefract(camera, l, 1.33f, cubemapTex);
+		reflectSphere.drawReflect(camera, l, cubemapTex);
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject o : objects) {
@@ -303,6 +320,7 @@ int main(int argc, char* argv[]){
 
 		ground.draw(camera,l);
 		mirror->draw(camera,l);
+
 
 		glfwSwapBuffers(window);
 
@@ -420,14 +438,20 @@ void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
 	}
 }
 
-void addGround(btDynamicsWorld* d_world) {
-	// Create a box shape for the ground (size 500x1x500)
-	btCollisionShape* groundShape = new btBoxShape(btVector3(500, 1, 500));
+void addGround(btDynamicsWorld* d_world, Object grd) {
+	// Create a box shape for the ground 
+	glm::vec3 dims = grd.getInitialDimensions();
+	glm::vec3 ctr = grd.getInitialCenter();
+	glm::vec3 offset = grd.getModel()[3];
+	std::cout << "Ground center: " << ctr.x << ", " << ctr.y << ", " << ctr.z << std::endl;
+	std::cout << "Ground offset: " << offset.x << ", " << offset.y << ", " << offset.z << std::endl;
+	std::cout << "Ground dimensions: " << dims.x << ", " << dims.y << ", " << dims.z << std::endl;
+	btCollisionShape* groundShape = new btBoxShape(btVector3(dims.x, dims.y, dims.z));
 
-	// Set up transformation (position it at y = -1 to align top at y = 0)
+	// Set up transformation (position it at y = -dims.y to align top at y = 0)
 	btTransform groundTransform;
 	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(0, -1, 0));
+	groundTransform.setOrigin(btVector3(ctr.x - dims.x/2 + offset.x  , ctr.y - dims.y / 2 + offset.y  , ctr.z - dims.z / 2 + offset.z ));
 
 	// Create a motion state
 	btDefaultMotionState* groundMotionState = new btDefaultMotionState(groundTransform);
