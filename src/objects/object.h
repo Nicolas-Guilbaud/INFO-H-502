@@ -88,13 +88,13 @@ public:
 		return model;
 	}
 
-	const glm::mat4& getInverseTranspose() {
+	const glm::mat4 getInverseTranspose() {
 		return inverse_transpose;
 	}
-	const glm::vec3& getInitialDimensions() {
+	const glm::vec3 getInitialDimensions() {
 		return mesh.getInitialDims();
 	}
-	const glm::vec3& getInitialCenter() {
+	const glm::vec3 getInitialCenter() {
 		return mesh.getInitialCtr();
 	}
 };

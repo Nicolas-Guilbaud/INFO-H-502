@@ -49,7 +49,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height);
 void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
-void addGround(btDynamicsWorld* d_world, Object grd);
+void addGround(btDynamicsWorld* d_world, Object* grd);
 void switchCameras();
 
 
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]){
 	/* Motivated student can implement the rotation using the mouse */
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetWindowSizeCallback(window,windowResizeCallback);
-	#ifndef NDEBUG
+	#ifdef NDEBUG
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); //GLFW_CURSOR_DISABLED
 	#else
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]){
 		dynamicsWorld->addRigidBody(obj.getRigidBody());
 	}
 
-	addGround( dynamicsWorld, ground);
+	addGround( dynamicsWorld, &ground);
 
 	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(2.0));	
 	double prev = 0;
@@ -340,6 +340,8 @@ int main(int argc, char* argv[]){
 	return 0;
 
 }
+
+
 
 void windowResizeCallback(GLFWwindow* window, int width, int height){
 	glViewport(0,0,width,height);
@@ -436,11 +438,11 @@ void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
 	}
 }
 
-void addGround(btDynamicsWorld* d_world, Object grd) {
+void addGround(btDynamicsWorld* d_world, Object* grd) {
 	// Create a box shape for the ground 
-	glm::vec3 dims = grd.getInitialDimensions();
-	glm::vec3 ctr = grd.getInitialCenter();
-	glm::vec3 offset = grd.getModel()[3];
+	glm::vec3 dims = grd->getInitialDimensions();
+	glm::vec3 ctr = grd->getInitialCenter();
+	glm::vec3 offset = grd->getModel()[3];
 	std::cout << "Ground center: " << ctr.x << ", " << ctr.y << ", " << ctr.z << std::endl;
 	std::cout << "Ground offset: " << offset.x << ", " << offset.y << ", " << offset.z << std::endl;
 	std::cout << "Ground dimensions: " << dims.x << ", " << dims.y << ", " << dims.z << std::endl;
