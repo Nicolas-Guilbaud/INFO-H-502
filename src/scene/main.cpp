@@ -227,7 +227,7 @@ int main(int argc, char* argv[]){
 
 	// reflecting sphere
 	Shader shader_reflect(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/reflect.frag");
-	Mesh reflectSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_reflect, false);
+	Mesh reflectSphereMesh(PATH_TO_MESHES "/sphere_smooth.obj", shader_reflect, cubemapTex);
 	reflectableObject reflectSphere(reflectSphereMesh);
 	glm::mat4 rectSphModel = glm::mat4(1);
 	rectSphModel = glm::scale(glm::translate(model, glm::vec3(-30, 25, 0)),glm::vec3(10.0));
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]){
 
 	// refracting sphere
 	Shader shader_refract(PATH_TO_SHADERS "/ref.vert", PATH_TO_SHADERS "/refract.frag");
-	Mesh refractSphereMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader_refract, false);
+	Mesh refractSphereMesh(PATH_TO_MESHES "/sphere_smooth.obj", shader_refract, cubemapTex);
 	refractableObject refractSphere(refractSphereMesh);
 	glm::mat4 ractSphModel = glm::mat4(1);
 	ractSphModel = glm::scale(glm::translate(model, glm::vec3(30, 25, 0)), glm::vec3(10.0));

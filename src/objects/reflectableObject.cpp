@@ -14,8 +14,6 @@ public:
 		shader.setMatrix4("M", model);
 		shader.setMatrix4("itM", inverse_transpose);
 		shader.setVector3f("u_view_pos", camera.Position);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
 		this->mesh.draw();
 	}
 
