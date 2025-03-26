@@ -39,7 +39,7 @@ float lastY = height / 2.0f;
 std::vector<Camera> theCameras = {
 	Camera(glm::vec3(0.0f, 10.0f, 2.0f),glm::vec3(0.0,0.25,-1.0),-90.0,-75.0, false),
 	Camera(glm::vec3(3.75f, 8.6f, 8.4f), glm::vec3(-0.3, 0.82, -0.5), -125.0, -35.0, false),
-	Camera(glm::vec3(-32.0f, 7.0f, 4.3f),glm::vec3(0.30, 0.90, -0.05), -14.0, -28.0, false),
+	Camera(glm::vec3(-30.0f, 5.0f, 0.0f),glm::vec3(0.30, 0.90, 0.0), 0, -20, false),
 	Camera(glm::vec3(0.0f, 0.0f, 10.0f))
 };
 int camIdx = 1;
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]){
 
 	//bowling ball
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(0.1));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh, true, F.getFresnelValue("iron"), model, 10.0);
 
@@ -209,7 +209,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.0, 1.0, 1.0)), 0.5);
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
 		objects.push_back(pin);
 	}
 
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld, &ground);
 
-	const Light l(glm::vec3(1.0, 2.0, 2.0), glm::vec3(2.0));	
+	const Light l(glm::vec3(-12.5, 2.0, 0.0), glm::vec3(5.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
@@ -327,7 +327,7 @@ int main(int argc, char* argv[]){
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
-		if(start_dynamics) dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
+		if(start_dynamics==true) dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
 
 		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
 	}
@@ -375,8 +375,13 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 		camera.ProcessKeyboardMovement(DOWN, 0.1);
 
 	//Launch ball with enter 
-	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
-		start_dynamics = true;
+	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+		if (camIdx % theCameras.size() == 2) { // aiming camera
+			glm::vec3 direction = glm::normalize(glm::vec3(camera.Front.x,0.0, camera.Front.z));
+			ball.setVelocity(15.0f*direction);
+			start_dynamics = true;
+		}
+	}
 
 	//Switch cameras with TAB
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
