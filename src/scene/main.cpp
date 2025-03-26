@@ -31,6 +31,7 @@
 const int width = 500;
 const int height = 500;
 
+bool start_dynamics = false;
 bool firstMouse = true;
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
@@ -184,7 +185,7 @@ int main(int argc, char* argv[]){
 
 	//bowling ball
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(0.1));
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh, true, F.getFresnelValue("iron"), model, 10.0);
 
@@ -208,7 +209,7 @@ int main(int argc, char* argv[]){
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.0, 1.0, 1.0)), 0.5);
 		objects.push_back(pin);
 	}
 
@@ -291,7 +292,7 @@ int main(int argc, char* argv[]){
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject o : objects) {
-			o.draw(camera,l);
+			o.draw(camera,l,start_dynamics);
 		}
 
 		ground.draw(camera,l);
@@ -313,7 +314,7 @@ int main(int argc, char* argv[]){
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject o : objects) {
-			o.draw(camera,l);
+			o.draw(camera,l,start_dynamics);
 		}
 
 		ground.draw(camera,l);
@@ -326,7 +327,7 @@ int main(int argc, char* argv[]){
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
-		dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
+		if(start_dynamics) dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
 
 		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
 	}
@@ -375,7 +376,7 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 
 	//Launch ball with enter 
 	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
-		ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
+		start_dynamics = true;
 
 	//Switch cameras with TAB
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)

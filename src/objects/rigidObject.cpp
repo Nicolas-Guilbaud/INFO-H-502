@@ -89,6 +89,8 @@ private:
 		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
 		rigidBody = new btRigidBody(*rbInfo);
 		rigidBody->proceedToTransform(btTransform(rotation, position));
+
+		setModel(glm::scale(nextModel, glm::vec3(s)));
 		
 	}
 
@@ -108,17 +110,21 @@ public:
 		rigidBody->setGravity(btVector3(V.x, V.y, V.z));
 	}
 
-	void draw(Camera c, Light l) {
+	void draw(Camera c, Light l, bool start_dynamics) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
-		btTransform updatedTransform;
-		rigidBody->getMotionState()->getWorldTransform(updatedTransform);
-		if (cubic) {
-			setModel(glm::scale(btTransformToGlmMat4(updatedTransform)*localTransform,scaling));// Retrieve updated transform for an object
+		glm::vec3 initial_dimensions = mesh.getInitialDims();
+		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+		if(start_dynamics){ // update model calculated by bullet dynamics world
+			btTransform updatedTransform;
+			rigidBody->getMotionState()->getWorldTransform(updatedTransform);
+			if (cubic) {
+				setModel(glm::scale(btTransformToGlmMat4(updatedTransform) * localTransform,scaling));// Retrieve updated transform for an object
+			}
+			else {
+				setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
+			}
 		}
-		else {
-			setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
-		}
-		Object::draw(c,l); //classic draw routine
+		Object::draw(c, l); //classic draw routine
 	}
 
 	btRigidBody* getRigidBody() {
