@@ -211,7 +211,44 @@ Nicolas:
     - [ ] documentation au vu d'implémenter le physically-based rendering (specular reflection) d'ici au 03/04
 
 Loup: 
-    - [ ] régler reflection/ refraction sur meshes fonctionnelles
+    - [x] régler reflection/ refraction sur meshes fonctionnelles
     - [ ] hitbox sphérique pour la balle de bowling
     - [ ] réflechir à la game logic au vu de son implémentation d'ici au 03/04
 
+## résumé
+
+### Loup:
+
+- refactor du code a corrigé la réflection/réfraction
+- résolution problème des quilles dans une autre branche  
+-> initialisation des boxes doivent être à moitié dans le sol    
+-> shift du modèle associé à la hitbox pour que ça soit visuellement sur la piste
+- hitbox: boule de bowling = cube -> glisse
+
+Game logic:
+
+- appuyer sur enter lance la balle
+- vecteur front de la camera = direction du lancer
+- comptage points se fera avec une machine à état  
+-> besoin de trouver comment détecter les quilles tombées
+- compteur: dans la console puis dans un coin de l'écran
+
+
+### Nicolas:
+
+partie sur le BRDF rédigé dans le rapport
+-> à implémenter
+
+## Objectifs:
+
+### Loup:
+
+- [ ] avoir l'effet de la balle qui roule
+- [ ] game logic:
+    - [ ] détection des quilles tombées
+    - [ ] calcul des points
+    - [ ] affichage des points
+
+### Nicolas:
+
+- [ ] implémenter le BRDF
