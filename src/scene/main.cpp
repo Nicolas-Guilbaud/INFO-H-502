@@ -443,15 +443,19 @@ void addGround(btDynamicsWorld* d_world, Object* grd) {
 	glm::vec3 dims = grd->getInitialDimensions();
 	glm::vec3 ctr = grd->getInitialCenter();
 	glm::vec3 offset = grd->getModel()[3];
+	/*
 	std::cout << "Ground center: " << ctr.x << ", " << ctr.y << ", " << ctr.z << std::endl;
 	std::cout << "Ground offset: " << offset.x << ", " << offset.y << ", " << offset.z << std::endl;
 	std::cout << "Ground dimensions: " << dims.x << ", " << dims.y << ", " << dims.z << std::endl;
+	*/
 	btCollisionShape* groundShape = new btBoxShape(btVector3(dims.x, dims.y, dims.z));
 
+	glm::vec3 trans = glm::vec3(ctr.x - dims.x / 2 + offset.x, ctr.y - dims.y / 2 + offset.y, ctr.z - dims.z / 2 + offset.z);
+	//std::cout << "ground hitbox translation: " <<  trans.x << ", " << trans.y << ", " << trans.z << std::endl;
 	// Set up transformation (position it at y = -dims.y to align top at y = 0)
 	btTransform groundTransform;
 	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(ctr.x - dims.x/2 + offset.x  , ctr.y - dims.y / 2 + offset.y  , ctr.z - dims.z / 2 + offset.z ));
+	groundTransform.setOrigin(btVector3(trans.x,trans.y,trans.z));
 
 	// Create a motion state
 	btDefaultMotionState* groundMotionState = new btDefaultMotionState(groundTransform);

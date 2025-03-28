@@ -15,7 +15,7 @@ private:
 	glm::vec3 scaling = glm::vec3(1.0);
 
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
-	btCompoundShape* compound = new btCompoundShape(); // Offsetting the hull 
+	glm::mat4 localTransform = glm::mat4(1.0);
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 	bool cubic = false;
 
@@ -81,27 +81,15 @@ private:
 		hull->setLocalScaling(btVector3(scaling.x, scaling.y, scaling.z));
 
 		// Define the local translation
-		btTransform localTransform;
-		localTransform.setIdentity();
-		localTransform.setOrigin(btVector3(mesh.getNormalizedCtr().x * model_scale.x, mesh.getNormalizedCtr().y * model_scale.y, mesh.getNormalizedCtr().z * model_scale.z)); // Shift the hull upward by offsetY
-
-		// Add the hull with the offset
-		compound->addChildShape(localTransform, hull);
-
+		localTransform = glm::translate(localTransform, -glm::vec3(mesh.getNormalizedCtr().x * model_scale.x, mesh.getNormalizedCtr().y * model_scale.y, mesh.getNormalizedCtr().z * model_scale.z)); // Shift the hull upward by offsetY
+			
 		// Set up the rigid body
 		btMotionState* motionState = new btDefaultMotionState();
-		if (cubic) {
-			compound->calculateLocalInertia(mass, inertia);
-			btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, compound, inertia);
-			rigidBody = new btRigidBody(*rbInfo);
-			rigidBody->proceedToTransform(btTransform(rotation, position));
-		}
-		else {
-			hull->calculateLocalInertia(mass, inertia);
-			btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
-			rigidBody = new btRigidBody(*rbInfo);
-			rigidBody->proceedToTransform(btTransform(rotation, position));
-		}
+		hull->calculateLocalInertia(mass, inertia);
+		btRigidBody::btRigidBodyConstructionInfo* rbInfo = new btRigidBody::btRigidBodyConstructionInfo(mass, motionState, hull, inertia);
+		rigidBody = new btRigidBody(*rbInfo);
+		rigidBody->proceedToTransform(btTransform(rotation, position));
+		
 	}
 
 public:
@@ -124,7 +112,12 @@ public:
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		btTransform updatedTransform;
 		rigidBody->getMotionState()->getWorldTransform(updatedTransform);
-		setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
+		if (cubic) {
+			setModel(glm::scale(btTransformToGlmMat4(updatedTransform)*localTransform,scaling));// Retrieve updated transform for an object
+		}
+		else {
+			setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
+		}
 		Object::draw(c,l); //classic draw routine
 	}
 
