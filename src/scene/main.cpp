@@ -27,6 +27,7 @@
 #include "../utils/Fresnel.h"
 
 #define PRINT_VEC3(vec) "(" << vec.x << "," << vec.y << "," << vec.z << ")"
+#define PRINT_VEC4(vec) "(" << vec[0] << "," <<  vec[1] << "," << vec[2] << "," <<  vec[3] ")"
 
 const int width = 500;
 const int height = 500;
@@ -51,6 +52,7 @@ void processKeyInput(GLFWwindow* window, rigidObject& obj);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world, Object* grd);
+int computeFallenPins(std::vector<rigidObject> PINS);
 void switchCameras();
 
 
@@ -166,9 +168,6 @@ int main(int argc, char* argv[]){
 	Shader shader(PATH_TO_SHADERS "/cube.vert", PATH_TO_SHADERS "/cube.frag");
 	GLuint ballTex = loadTexture(PATH_TO_TEXTURES "/bowling_ball.jpg");
 	
-	//Creating the objects
-	std::vector<rigidObject> objects;
-	
 	Fresnel F(PATH_TO_OTHERS "/Fresnel.txt");
 	std::vector<std::string> material_List = F.getMaterialList();
 
@@ -185,14 +184,12 @@ int main(int argc, char* argv[]){
 
 	//bowling ball
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(0.50));
 	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh, true, F.getFresnelValue("iron"), model, 10.0);
 
 	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 	ball.getRigidBody()->setFriction(0.0);
-
-	objects.push_back(ball);
 
 	// bowling pins
 	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
@@ -208,9 +205,12 @@ int main(int argc, char* argv[]){
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
 
+	//Creating the objects
+	std::vector<rigidObject> PINS;
+
 	for (auto& pos : pin_positions) {
 		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
-		objects.push_back(pin);
+		PINS.push_back(pin);
 	}
 
 	//ground
@@ -252,9 +252,10 @@ int main(int argc, char* argv[]){
 	//dynamicsWorld->setGravity(btVector3(0.0,0.0,0.0));
 	dynamicsWorld->setGravity(btVector3(0, -9.81, 0)); // Set gravity
 
-	for (auto& obj: objects) {
+	for (auto& obj: PINS) {
 		dynamicsWorld->addRigidBody(obj.getRigidBody());
 	}
+	dynamicsWorld->addRigidBody(ball.getRigidBody());
 
 	addGround( dynamicsWorld, &ground);
 
@@ -278,7 +279,9 @@ int main(int argc, char* argv[]){
 
 	//Rendering
 
+	int i = 0;
 	while (!glfwWindowShouldClose(window)) {
+		i++;
 		glfwPollEvents();
 		double now = glfwGetTime();
 
@@ -291,9 +294,10 @@ int main(int argc, char* argv[]){
 		cubemapObj.draw(camera,l);
 		glDepthFunc(GL_LESS);
 		// draw objects
-		for (rigidObject o : objects) {
+		for (rigidObject& o : PINS) {
 			o.draw(camera,l,start_dynamics);
 		}
+		ball.draw(camera, l, start_dynamics);
 
 		ground.draw(camera,l);
 
@@ -313,9 +317,10 @@ int main(int argc, char* argv[]){
 		reflectSphere.draw(camera, l, cubemapTex);
 		glDepthFunc(GL_LESS);
 		// draw objects
-		for (rigidObject o : objects) {
+		for (rigidObject& o : PINS) {
 			o.draw(camera,l,start_dynamics);
 		}
+		ball.draw(camera, l, start_dynamics);
 
 		ground.draw(camera,l);
 		mirror->draw(camera,l);
@@ -327,8 +332,11 @@ int main(int argc, char* argv[]){
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
-		if(start_dynamics==true) dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
-
+		if (start_dynamics == true)
+		{
+			dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
+			if (i % 1000 == 0) std::cout << "\nFallen pins: " << computeFallenPins(PINS) << std::endl;
+		}
 		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
 	}
 
@@ -378,7 +386,7 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball) {
 	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
 		if (camIdx % theCameras.size() == 2) { // aiming camera
 			glm::vec3 direction = glm::normalize(glm::vec3(camera.Front.x,0.0, camera.Front.z));
-			ball.setVelocity(15.0f*direction);
+			ball.setVelocity(10.0f*direction);
 			start_dynamics = true;
 		}
 	}
@@ -477,4 +485,14 @@ void addGround(btDynamicsWorld* d_world, Object* grd) {
 
 void switchCameras() {
 	camera = theCameras[(++camIdx) % theCameras.size()];
+}
+
+int computeFallenPins(std::vector<rigidObject> PINS) {
+	int res = 0;
+	for (rigidObject& pin : PINS) {
+		if (pin.isOnTheSide()) {
+			res++;
+		}
+	}
+	return res;
 }

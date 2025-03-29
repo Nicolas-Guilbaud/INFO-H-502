@@ -30,7 +30,7 @@
 class Object {	
 protected:
 	glm::mat4 model = glm::mat4(1.0);
-	glm::mat4 inverse_transpose = model;
+	glm::mat4 inverse_transpose = glm::mat4(1.0);
 	Mesh mesh;
 	glm::vec3 F0;
 private:

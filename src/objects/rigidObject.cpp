@@ -8,16 +8,17 @@
 #define NDEBUG
 #define CHARACTERISTIC_LEN 1.0f 
 #define MAX3(a, b, c) ((a) > (b) ? ((a) > (c) ? (a) : (c)) : ((b) > (c) ? (b) : (c)))
-
+#define PRINT_VEC4(vec) "(" << vec.x << "," << vec.y << "," << vec.z << "," << vec[3] << ")"
 
 class rigidObject : public Object{
 private:
+	int i = 0;
 	glm::vec3 scaling = glm::vec3(1.0);
-
 	btConvexHullShape* hull = nullptr; // Convex hull for collision shape
 	glm::mat4 localTransform = glm::mat4(1.0);
 	btRigidBody* rigidBody = nullptr; // Rigid body for dynamics world
 	bool cubic = false;
+	bool on_the_side = false;
 
 	void setHullInit(bool isCubic) {
 		if (hull) delete hull;
@@ -100,7 +101,6 @@ public:
 		setRigidBody(nextModel, m);
 	}
 
-	
 	void setVelocity(glm::vec3 V) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		rigidBody->setLinearVelocity(btVector3(V.x, V.y, V.z));
@@ -110,21 +110,63 @@ public:
 		rigidBody->setGravity(btVector3(V.x, V.y, V.z));
 	}
 
-	void draw(Camera c, Light l, bool start_dynamics) {
+	void draw(Camera c, Light l, bool start_dynamics, bool printMode = false) {
 		if (!rigidBody) setRigidBody(glm::mat4(1.0), 1.0);
 		glm::vec3 initial_dimensions = mesh.getInitialDims();
 		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 		if(start_dynamics){ // update model calculated by bullet dynamics world
 			btTransform updatedTransform;
 			rigidBody->getMotionState()->getWorldTransform(updatedTransform);
+			glm::mat4 updatedGlmTransform = btTransformToGlmMat4(updatedTransform);
+			if(++i%1000==0 && printMode) printVerticalInclination(updatedGlmTransform);
+			on_the_side = rotGreater(80.0f, updatedGlmTransform);
 			if (cubic) {
-				setModel(glm::scale(btTransformToGlmMat4(updatedTransform) * localTransform,scaling));// Retrieve updated transform for an object
+				setModel(glm::scale(updatedGlmTransform * localTransform,scaling));// Retrieve updated transform for an object
 			}
 			else {
 				setModel(glm::scale(btTransformToGlmMat4(updatedTransform), scaling));// Retrieve updated transform for an object
 			}
 		}
+		if (++i % 1000 == 0 && printMode) printVerticalInclination(glm::scale(this->model,1.0f/scaling));
 		Object::draw(c, l); //classic draw routine
+	}
+
+	bool rotGreater(float angle, glm::mat4 model) {
+		bool greater = false;
+		glm::vec3 y_dir = glm::normalize(glm::vec3(model[1])); // transformed local Y axis
+		glm::vec3 world_up(0.0f, 1.0f, 0.0f);
+
+		float dot_product = glm::dot(y_dir, world_up);
+		dot_product = glm::clamp(dot_product, -1.0f, 1.0f); // Ensure domain of acos is valid
+
+		float angle_rad = glm::acos(dot_product); // angle with world Y axis
+		float angle_deg = glm::degrees(angle_rad);
+		// Check for rotation greater than given degrees
+		if (std::abs(angle_deg) > angle) {
+			// More than angle rotation around Y
+			greater = true;
+		}
+		return greater;
+	};
+
+	void printVerticalInclination(const glm::mat4 model) {
+		glm::vec3 y_dir = glm::normalize(glm::vec3(model[1])); // transformed local Y axis
+		glm::vec3 world_up(0.0f, 1.0f, 0.0f);
+
+		float dot_product = glm::dot(y_dir, world_up);
+		dot_product = glm::clamp(dot_product, -1.0f, 1.0f); // Ensure domain of acos is valid
+
+		float angle_rad = glm::acos(dot_product); // angle with world Y axis
+		float angle_deg = glm::degrees(angle_rad);
+
+		std::cout << "Inclination angle with respect to vertical (Y): " << angle_deg << " degrees" << std::endl;
+	}
+
+	void printModel(glm::mat4 mdl) {
+		std::cout << "\nmodel 0: " << PRINT_VEC4((mdl)[0]) << std::endl;
+		std::cout << "model 1: " << PRINT_VEC4((mdl)[1]) << std::endl;
+		std::cout << "model 2: " << PRINT_VEC4((mdl)[2]) << std::endl;
+		std::cout << "model 3: " << PRINT_VEC4((mdl)[3]) << std::endl;
 	}
 
 	btRigidBody* getRigidBody() {
@@ -151,4 +193,9 @@ public:
 
 		return matrix;
 	}
+
+	bool isOnTheSide() {
+		return on_the_side;
+	}
 };
+
