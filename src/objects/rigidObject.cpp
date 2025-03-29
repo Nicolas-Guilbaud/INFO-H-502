@@ -31,13 +31,13 @@ private:
 			btVector3 halfExtents(mesh.getInitialDims().x * 0.5f, mesh.getInitialDims().y * 0.5f, mesh.getInitialDims().z * 0.5f);
 			btVector3 vertices[8] = {
 			btVector3(-halfExtents.x(), -halfExtents.y(), -halfExtents.z()),
-			btVector3(halfExtents.x(), -halfExtents.y(), -halfExtents.z()),
-			btVector3(-halfExtents.x(),  halfExtents.y(), -halfExtents.z()),
-			btVector3(halfExtents.x(),  halfExtents.y(), -halfExtents.z()),
-			btVector3(-halfExtents.x(), -halfExtents.y(),  halfExtents.z()),
-			btVector3(halfExtents.x(), -halfExtents.y(),  halfExtents.z()),
+			btVector3(halfExtents.x(), - halfExtents.y(), -halfExtents.z()),
+			btVector3(-halfExtents.x(),   halfExtents.y(), -halfExtents.z()),
+			btVector3(halfExtents.x(),   halfExtents.y(), -halfExtents.z()),
+			btVector3(-halfExtents.x(), - halfExtents.y(),  halfExtents.z()),
+			btVector3(halfExtents.x(), -  halfExtents.y(),  halfExtents.z()),
 			btVector3(-halfExtents.x(),  halfExtents.y(),  halfExtents.z()),
-			btVector3(halfExtents.x(),  halfExtents.y(),  halfExtents.z())
+			btVector3(halfExtents.x(),   halfExtents.y(),  halfExtents.z())
 			};
 			for (int i = 0; i < 8; i++) {
 				hull->addPoint(vertices[i]);
@@ -99,6 +99,31 @@ public:
 	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0 = glm::vec3(1.0), const glm::mat4& nextModel = glm::mat4(1.0), float m = 1.0) : Object(mesh, F0) { // constructor
 		setHullInit(isCubic);
 		setRigidBody(nextModel, m);
+	}
+
+	void resetRigidBody(const glm::mat4& nextModel) { // set the RigidBody in the world coordinates according to nextModel
+		// Extract translation (last column of the matrix)
+		btVector3 position(nextModel[3][0], nextModel[3][1], nextModel[3][2]);
+
+		// Extract rotation (upper-left 3x3 part)
+		glm::mat3 rotationMatrix(nextModel);
+		glm::quat glmQuat = glm::quat_cast(rotationMatrix);
+		btQuaternion rotation(glmQuat.x, glmQuat.y, glmQuat.z, glmQuat.w);
+
+		// Extract user-imposed scaling
+		glm::vec3 model_scale = glm::vec3(glm::length(glm::vec3(nextModel[0])),
+			glm::length(glm::vec3(nextModel[1])),
+			glm::length(glm::vec3(nextModel[2])));
+
+
+		// Set up the rigid body
+		rigidBody->setWorldTransform(btTransform(rotation, position));
+		rigidBody->getMotionState()->setWorldTransform(btTransform(rotation, position));
+
+		glm::vec3 initial_dimensions = mesh.getInitialDims();
+		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
+		setModel(glm::scale( nextModel, glm::vec3(s)));
+
 	}
 
 	void setVelocity(glm::vec3 V) {
@@ -196,6 +221,10 @@ public:
 
 	bool isOnTheSide() {
 		return on_the_side;
+	}
+
+	bool hasDropped() {
+		return rigidBody->getCenterOfMassPosition().y() < -10.0f;
 	}
 };
 

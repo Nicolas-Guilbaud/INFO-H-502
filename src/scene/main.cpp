@@ -32,6 +32,7 @@
 const int width = 500;
 const int height = 500;
 
+bool firstShot = true;
 bool start_dynamics = false;
 bool firstMouse = true;
 float lastX = width / 2.0f;
@@ -48,7 +49,7 @@ Camera camera = theCameras[camIdx];
 MirrorFace* mirror;
 
 void windowResizeCallback(GLFWwindow* window, int width, int height);
-void processKeyInput(GLFWwindow* window, rigidObject& obj);
+void processKeyInput(GLFWwindow* window, rigidObject& obj, btDiscreteDynamicsWorld* dWorld);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world, Object* grd);
@@ -208,8 +209,9 @@ int main(int argc, char* argv[]){
 	//Creating the objects
 	std::vector<rigidObject> PINS;
 
+	glm::vec3 pin_scale = glm::vec3(1.5, 1.5, 1.5);
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), glm::vec3(1.5, 1.5, 1.5)), 0.5);
+		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), pin_scale), 0.5);
 		PINS.push_back(pin);
 	}
 
@@ -279,7 +281,7 @@ int main(int argc, char* argv[]){
 
 	//Rendering
 
-	int i = 0;
+	int i = 0; 
 	while (!glfwWindowShouldClose(window)) {
 		i++;
 		glfwPollEvents();
@@ -309,7 +311,7 @@ int main(int argc, char* argv[]){
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		processKeyInput(window, ball);
+		processKeyInput(window, ball, dynamicsWorld);
 
 		glDepthFunc(GL_LEQUAL);
 		cubemapObj.draw(camera,l);
@@ -333,11 +335,22 @@ int main(int argc, char* argv[]){
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
 		if (start_dynamics == true)
-		{
+		{	
 			dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
-			if (i % 1000 == 0) std::cout << "\nFallen pins: " << computeFallenPins(PINS) << std::endl;
 		}
-		//DetectCollisions(dynamicsWorld); // high cost, slows down computations significantly
+		if (ball.hasDropped()) {
+			ball.resetRigidBody(model);
+			ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
+			if (!firstShot) {
+				int i = 0;
+				for (auto& pin : PINS) {
+					pin.resetRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pin_positions[i++]), pin_scale));
+				}
+			}
+			start_dynamics = false;
+			firstShot = !firstShot;
+		}
+		if (i % 1000 == 0) std::cout << "\nFallen pins: " << computeFallenPins(PINS) << std::endl;
 	}
 
 	delete mirror;
@@ -356,7 +369,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height){
 	glViewport(0,0,width,height);
 }
 
-void processKeyInput(GLFWwindow* window, rigidObject& ball) {
+void processKeyInput(GLFWwindow* window, rigidObject& ball, btDiscreteDynamicsWorld* dWorld) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
