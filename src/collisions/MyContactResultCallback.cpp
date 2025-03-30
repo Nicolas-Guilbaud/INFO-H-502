@@ -5,6 +5,7 @@
 // Custom callback class
 class MyContactResultCallback : public btCollisionWorld::ContactResultCallback {
 public:
+    bool contactDetected = false;
     // Override the addSingleResult method
     btScalar addSingleResult(btManifoldPoint& cp,
         const btCollisionObjectWrapper* colObj0Wrap,
@@ -20,7 +21,7 @@ public:
         std::cout << "\rCollision detected at position (" << collisionPoint.x() << ", "
             << collisionPoint.y() << ", "
             << collisionPoint.z() << ")" << std::flush;
-        
+		contactDetected = true;
         return 0; // Return the applied impulse or any custom value if needed
     }
 };

@@ -32,6 +32,9 @@
 const int width = 500;
 const int height = 500;
 
+int score[10][2];
+bool endGame = false;
+int trial = 0;
 bool firstShot = true;
 bool start_dynamics = false;
 bool firstMouse = true;
@@ -51,11 +54,11 @@ MirrorFace* mirror;
 void windowResizeCallback(GLFWwindow* window, int width, int height);
 void processKeyInput(GLFWwindow* window, rigidObject& obj, btDiscreteDynamicsWorld* dWorld);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
-void DetectCollisions(btDiscreteDynamicsWorld* dWorld);
+bool DetectCollisions(btDiscreteDynamicsWorld* dWorld);
 void addGround(btDynamicsWorld* d_world, Object* grd);
 int computeFallenPins(std::vector<rigidObject> PINS);
 void switchCameras();
-
+void dispScore();
 
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -185,9 +188,10 @@ int main(int argc, char* argv[]){
 
 	//bowling ball
 	glm::mat4 model = glm::mat4(1.0);
-	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(0.50));
-	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	rigidObject ball(ballMesh, true, F.getFresnelValue("iron"), model, 10.0);
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
+	//Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
+	Mesh ballMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader, ballTex);
+	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"), model, 10.0);
 
 	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 	ball.getRigidBody()->setFriction(0.0);
@@ -261,7 +265,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld, &ground);
 
-	const Light l(glm::vec3(-12.5, 2.0, 0.0), glm::vec3(5.0));	
+	const Light l(glm::vec3(-25, 2.0, 0.0), glm::vec3(1.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
@@ -334,14 +338,17 @@ int main(int argc, char* argv[]){
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
-		if (start_dynamics == true)
+		if (start_dynamics == true && endGame == false)
 		{	
 			dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
 		}
-		if (ball.hasDropped()) {
+		if (ball.hasDropped() && endGame == false) {
+			if (firstShot) { score[trial][0] = computeFallenPins(PINS); }
 			ball.resetRigidBody(model);
 			ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
 			if (!firstShot) {
+				score[trial][1] = computeFallenPins(PINS)- score[trial][0];
+				if (trial++ == 9) { endGame = true; dispScore();}
 				int i = 0;
 				for (auto& pin : PINS) {
 					pin.resetRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pin_positions[i++]), pin_scale));
@@ -350,7 +357,6 @@ int main(int argc, char* argv[]){
 			start_dynamics = false;
 			firstShot = !firstShot;
 		}
-		if (i % 1000 == 0) std::cout << "\nFallen pins: " << computeFallenPins(PINS) << std::endl;
 	}
 
 	delete mirror;
@@ -400,7 +406,7 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball, btDiscreteDynamicsWo
 		if (camIdx % theCameras.size() == 2) { // aiming camera
 			glm::vec3 direction = glm::normalize(glm::vec3(camera.Front.x,0.0, camera.Front.z));
 			ball.setVelocity(10.0f*direction);
-			start_dynamics = true;
+			if(!endGame) start_dynamics = true;
 		}
 	}
 
@@ -453,7 +459,7 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
+bool DetectCollisions(btDiscreteDynamicsWorld* d_world) {
 
 	btCollisionObjectArray c_obj_arr = d_world->getCollisionObjectArray();
 	MyContactResultCallback resultCallback;
@@ -463,6 +469,7 @@ void DetectCollisions(btDiscreteDynamicsWorld* d_world) {
 			d_world->contactPairTest(c_obj_arr[i],c_obj_arr[j], resultCallback);
 		}
 	}
+	return resultCallback.contactDetected;
 }
 
 void addGround(btDynamicsWorld* d_world, Object* grd) {
@@ -508,4 +515,14 @@ int computeFallenPins(std::vector<rigidObject> PINS) {
 		}
 	}
 	return res;
+}
+
+void dispScore() {
+	int totalScore = 0;
+	std::cout << "\nGame over! Here are the results: " << std::endl;
+	for (int i = 0; i < 10; i++) {
+		totalScore += score[i][0] + score[i][1];
+		std::cout << "Trial " << i + 1 << ": " << score[i][0] << " pins down, " << score[i][1] << " additional pins down" << std::endl;
+	}
+	std::cout << "Total score: " << totalScore << std::endl;
 }
