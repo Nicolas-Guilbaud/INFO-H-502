@@ -244,9 +244,9 @@ partie sur le BRDF rédigé dans le rapport
 ### Loup:
 
 - [ ] avoir l'effet de la balle qui roule
-- [ ] game logic:
-    - [ ] détection des quilles tombées
-    - [ ] calcul des points
+- [x] game logic:
+    - [x] détection des quilles tombées
+    - [x] calcul des points
     - [ ] affichage des points
 
 ### Nicolas:
