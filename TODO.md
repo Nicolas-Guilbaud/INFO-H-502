@@ -251,4 +251,4 @@ partie sur le BRDF rédigé dans le rapport
 
 ### Nicolas:
 
-- [ ] implémenter le BRDF
+- [x] implémenter le BRDF
