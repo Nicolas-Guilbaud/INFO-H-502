@@ -96,7 +96,7 @@ private:
 	}
 
 public:
-	rigidObject(Mesh mesh, bool isCubic, glm::vec3 F0 = glm::vec3(1.0), const glm::mat4& nextModel = glm::mat4(1.0), float m = 1.0) : Object(mesh, F0) { // constructor
+	rigidObject(Mesh mesh, bool isCubic, float roughness, glm::vec3 F0 = glm::vec3(1.0), const glm::mat4& nextModel = glm::mat4(1.0), float m = 1.0) : Object(mesh,F0,roughness) { // constructor
 		setHullInit(isCubic);
 		setRigidBody(nextModel, m);
 	}

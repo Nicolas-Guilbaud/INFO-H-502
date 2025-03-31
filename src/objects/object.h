@@ -33,10 +33,12 @@ protected:
 	glm::mat4 inverse_transpose = glm::mat4(1.0);
 	Mesh mesh;
 	glm::vec3 F0;
+	float roughness;
 private:
 public:
 
-	Object(Mesh mesh, glm::vec3 F0=glm::vec3(1.0)) :F0(F0), mesh(mesh){
+	Object(Mesh mesh, glm::vec3 F0=glm::vec3(1.0),float roughness = 1.0f) :
+	F0(F0), roughness(roughness), mesh(mesh){
 	}
 
 	void draw(Camera camera, Light l){
@@ -51,6 +53,7 @@ public:
 		shader.setVector3f("u_light_pos", l.position);
 		shader.setVector3f("F0", F0);
 		shader.setVector3f("light_spectrum", l.spectrum);
+		shader.setFloat("roughness",roughness);
 
 		if(mesh.hasTexture()){
 			shader.setTexture("img",0);

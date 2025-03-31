@@ -191,7 +191,7 @@ int main(int argc, char* argv[]){
 	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
 	//Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	Mesh ballMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader, ballTex);
-	rigidObject ball(ballMesh, false, F.getFresnelValue("iron"), model, 10.0);
+	rigidObject ball(ballMesh,0.5, false, F.getFresnelValue("iron"), model, 10.0);
 
 	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 	ball.getRigidBody()->setFriction(0.0);
@@ -215,7 +215,7 @@ int main(int argc, char* argv[]){
 
 	glm::vec3 pin_scale = glm::vec3(1.5, 1.5, 1.5);
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), pin_scale), 0.5);
+		rigidObject pin(pinMesh,0.2, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), pin_scale), 0.5);
 		PINS.push_back(pin);
 	}
 
