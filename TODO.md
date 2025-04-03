@@ -274,7 +274,8 @@ partie sur le BRDF rédigé dans le rapport
 - [ ] implémenter rendu de texte dans le plan de la caméra pour l'affichage des points
 
 ### Nicolas:
-- [ ] modifier les paramètres de la BRDF pour un éclairage plus contrasté et lumineux
+- [x] modifier les paramètres de la BRDF pour un éclairage plus contrasté et lumineux
+- [x] réparer le redimensionnement dynamique de la fenêtre (viewport)
 - [ ] refactor la game logic dans une classe à part au vu de l'implémentation de mécanismes plus compliqués la semaine d'après comme les strikes et les spares
 
 ### Pour plus tard:
