@@ -372,7 +372,12 @@ int main(int argc, char* argv[]){
 
 
 void windowResizeCallback(GLFWwindow* window, int width, int height){
+	#ifndef NDEBUG
+	std::cout << "Resizing to " << width << "x" << height << " px." << std::endl;
+	#endif
 	glViewport(0,0,width,height);
+	mirror->width = width;
+	mirror->height = height;
 }
 
 void processKeyInput(GLFWwindow* window, rigidObject& ball, btDiscreteDynamicsWorld* dWorld) {
