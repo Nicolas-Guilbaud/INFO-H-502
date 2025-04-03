@@ -239,6 +239,7 @@ Game logic:
 partie sur le BRDF rédigé dans le rapport
 -> à implémenter
 
+# Réunion 03/04/25
 ## Objectifs:
 
 ### Loup:
@@ -252,3 +253,32 @@ partie sur le BRDF rédigé dans le rapport
 ### Nicolas:
 
 - [x] implémenter le BRDF
+
+## Résumé:
+
+### Loup:
+- pas d'effet de balle qui roule car incertitude sur la valeur des fps, affichage instable
+- game logic comme state machine dans la boucle de rendering avec bug d'affichage lié à la transition du rendu statique vers dynamique
+- calcul des points ne prenant pas en compte strikes et spares
+- affichage des points dans le terminal mais pas sur l'écran à ce stade
+
+### Nicolas:
+- implémentation du physically-based rendering via la BRDF: facteur de la réfléctance de Fresnel avec Schlick's approximation, facteur de masking-shadowing, facteur de distribution GGX
+
+# Réunion 10/04/25
+## Objectifs: 
+
+### Loup: 
+
+- [ ] détecter collisions boules-quilles comme marqueur de transition entre rendu dynamique/statique des modèles quilles et balles
+- [ ] implémenter rendu de texte dans le plan de la caméra pour l'affichage des points
+
+### Nicolas:
+- [ ] modifier les paramètres de la BRDF pour un éclairage plus contrasté et lumineux
+- [ ] refactor la game logic dans une classe à part au vu de l'implémentation de mécanismes plus compliqués la semaine d'après comme les strikes et les spares
+
+### Pour plus tard:
+- [ ] amélioration luminosité par l'ajout de plusieurs sources
+- [ ] écriture du rapport, screenshots des features basiques
+- [ ] écriture d'un README.md
+- [ ] création d'une vidéo mp4 et présentation des features principales
