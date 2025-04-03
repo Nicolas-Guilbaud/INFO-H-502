@@ -265,7 +265,7 @@ int main(int argc, char* argv[]){
 
 	addGround( dynamicsWorld, &ground);
 
-	const Light l(glm::vec3(-25, 2.0, 0.0), glm::vec3(1.0));	
+	const Light l(glm::vec3(18, 2.0, 0.0), glm::vec3(1.0));	
 	double prev = 0;
 	int deltaFrame = 0;
 	//fps function
