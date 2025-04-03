@@ -278,7 +278,7 @@ partie sur le BRDF rédigé dans le rapport
 - [ ] refactor la game logic dans une classe à part au vu de l'implémentation de mécanismes plus compliqués la semaine d'après comme les strikes et les spares
 
 ### Pour plus tard:
-- [ ] amélioration luminosité par l'ajout de plusieurs sources
-- [ ] écriture du rapport, screenshots des features basiques
-- [ ] écriture d'un README.md
-- [ ] création d'une vidéo mp4 et présentation des features principales
+- amélioration luminosité par l'ajout de plusieurs sources
+- écriture du rapport, screenshots des features basiques
+- écriture d'un README.md
+- création d'une vidéo mp4 et présentation des features principales
