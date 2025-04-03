@@ -13,8 +13,8 @@
     - [x] Load a texture
     - [x] Load a shader
     - [ ] Load the entire scene
-- [ ] Interactions:
-    - [ ] Launch the ball
+- [x] Interactions:
+    - [x] Launch the ball
 - [ ] others:
     - [ ] code the logic behind the game
     - [ ] portal 2 logic (used in the level design)
