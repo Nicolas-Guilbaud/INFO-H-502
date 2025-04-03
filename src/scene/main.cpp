@@ -34,6 +34,7 @@ const int height = 500;
 
 int score[10][2];
 bool endGame = false;
+bool collided = false;
 int trial = 0;
 bool firstShot = true;
 bool start_dynamics = false;
@@ -54,8 +55,8 @@ MirrorFace* mirror;
 void windowResizeCallback(GLFWwindow* window, int width, int height);
 void processKeyInput(GLFWwindow* window, rigidObject& obj, btDiscreteDynamicsWorld* dWorld);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
-bool DetectCollisions(btDiscreteDynamicsWorld* dWorld);
-void addGround(btDynamicsWorld* d_world, Object* grd);
+bool DetectPinBallCollisions(btDiscreteDynamicsWorld* d_world, btRigidBody* groundObject, btRigidBody* ballObject);
+btRigidBody* addGround(btDynamicsWorld* d_world, Object* grd);
 int computeFallenPins(std::vector<rigidObject> PINS);
 void switchCameras();
 void dispScore();
@@ -215,7 +216,7 @@ int main(int argc, char* argv[]){
 
 	glm::vec3 pin_scale = glm::vec3(1.5, 1.5, 1.5);
 	for (auto& pos : pin_positions) {
-		rigidObject pin(pinMesh,0.2, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), pos), pin_scale), 0.5);
+		rigidObject pin(pinMesh,0.2, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), 1.1f*pos), pin_scale), 0.5);
 		PINS.push_back(pin);
 	}
 
@@ -263,7 +264,8 @@ int main(int argc, char* argv[]){
 	}
 	dynamicsWorld->addRigidBody(ball.getRigidBody());
 
-	addGround( dynamicsWorld, &ground);
+	// create box shape for the ground
+	btRigidBody* ground_rigid_body = addGround(dynamicsWorld, &ground);
 
 	const Light l(glm::vec3(-25, 2.0, 0.0), glm::vec3(1.0));	
 	double prev = 0;
@@ -301,7 +303,7 @@ int main(int argc, char* argv[]){
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject& o : PINS) {
-			o.draw(camera,l,start_dynamics);
+			o.draw(camera,l,start_dynamics && collided);
 		}
 		ball.draw(camera, l, start_dynamics);
 
@@ -324,7 +326,7 @@ int main(int argc, char* argv[]){
 		glDepthFunc(GL_LESS);
 		// draw objects
 		for (rigidObject& o : PINS) {
-			o.draw(camera,l,start_dynamics);
+			o.draw(camera,l, start_dynamics && collided);
 		}
 		ball.draw(camera, l, start_dynamics);
 
@@ -355,8 +357,10 @@ int main(int argc, char* argv[]){
 				}
 			}
 			start_dynamics = false;
+			collided = false; 
 			firstShot = !firstShot;
 		}
+		if(!collided) collided = DetectPinBallCollisions(dynamicsWorld, ground_rigid_body, ball.getRigidBody());
 	}
 
 	delete mirror;
@@ -459,20 +463,22 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn){
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-bool DetectCollisions(btDiscreteDynamicsWorld* d_world) {
+bool DetectPinBallCollisions(btDiscreteDynamicsWorld* d_world, btRigidBody* groundObject, btRigidBody* ballObject) {
 
 	btCollisionObjectArray c_obj_arr = d_world->getCollisionObjectArray();
 	MyContactResultCallback resultCallback;
 	int arr_size = c_obj_arr.size();
-	for (int i = 0; i < arr_size-1; i++) {
+	for (int i = 1; i < arr_size-1; i++) {
 		for (int j = i + 1; j < arr_size; j++) {
+			// Skip if either object is the ground
+			if (c_obj_arr[i] == groundObject || c_obj_arr[j] == groundObject || (c_obj_arr[i]!=ballObject&& c_obj_arr[j]!=ballObject)) continue;
 			d_world->contactPairTest(c_obj_arr[i],c_obj_arr[j], resultCallback);
 		}
 	}
 	return resultCallback.contactDetected;
 }
 
-void addGround(btDynamicsWorld* d_world, Object* grd) {
+btRigidBody* addGround(btDynamicsWorld* d_world, Object* grd) {
 	// Create a box shape for the ground 
 	glm::vec3 dims = grd->getInitialDimensions();
 	glm::vec3 ctr = grd->getInitialCenter();
@@ -501,6 +507,8 @@ void addGround(btDynamicsWorld* d_world, Object* grd) {
 
 	// Add to the dynamics world
 	d_world->addRigidBody(groundRigidBody);
+
+	return groundRigidBody;
 }
 
 void switchCameras() {
