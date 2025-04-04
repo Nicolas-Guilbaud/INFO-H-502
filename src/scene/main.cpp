@@ -1,4 +1,4 @@
-// standard C++ include files
+b	// standard C++ include files
 #include <stdio.h>
 #include <math.h>  // Required for sqrt
 #include <thread>
@@ -190,8 +190,7 @@ int main(int argc, char* argv[]){
 	//bowling ball
 	glm::mat4 model = glm::mat4(1.0);
 	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
-	//Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
-	Mesh ballMesh(PATH_TO_MESHES "/sphere_coarse.obj", shader, ballTex);
+	Mesh ballMesh(PATH_TO_MESHES "/Bowling_Ball_Clean.obj",shader,ballTex);
 	rigidObject ball(ballMesh,0.5, false, F.getFresnelValue("iron"), model, 10.0);
 
 	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
