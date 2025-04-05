@@ -270,7 +270,7 @@ partie sur le BRDF rédigé dans le rapport
 
 ### Loup: 
 
-- [ ] détecter collisions boules-quilles comme marqueur de transition entre rendu dynamique/statique des modèles quilles et balles
+- [x] détecter collisions boules-quilles comme marqueur de transition entre rendu dynamique/statique des modèles quilles et balles
 - [ ] implémenter rendu de texte dans le plan de la caméra pour l'affichage des points
 
 ### Nicolas:
