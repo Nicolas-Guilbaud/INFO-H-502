@@ -276,7 +276,7 @@ partie sur le BRDF rédigé dans le rapport
 ### Nicolas:
 - [x] modifier les paramètres de la BRDF pour un éclairage plus contrasté et lumineux
 - [x] réparer le redimensionnement dynamique de la fenêtre (viewport)
-- [ ] refactor la game logic dans une classe à part au vu de l'implémentation de mécanismes plus compliqués la semaine d'après comme les strikes et les spares
+- [x] refactor la game logic dans une classe à part au vu de l'implémentation de mécanismes plus compliqués la semaine d'après comme les strikes et les spares
 
 ### Pour plus tard:
 - amélioration luminosité par l'ajout de plusieurs sources
