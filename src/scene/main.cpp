@@ -1,4 +1,4 @@
-b	// standard C++ include files
+// standard C++ include files
 #include <stdio.h>
 #include <math.h>  // Required for sqrt
 #include <thread>
@@ -25,6 +25,7 @@ b	// standard C++ include files
 #include "../utils/Texture.h"
 #include "../objects/MirrorFace.cpp"
 #include "../utils/Fresnel.h"
+#include "../game/GameManager.cpp"
 
 #define PRINT_VEC3(vec) "(" << vec.x << "," << vec.y << "," << vec.z << ")"
 #define PRINT_VEC4(vec) "(" << vec[0] << "," <<  vec[1] << "," << vec[2] << "," <<  vec[3] ")"
@@ -32,15 +33,27 @@ b	// standard C++ include files
 const int width = 500;
 const int height = 500;
 
-int score[10][2];
-bool endGame = false;
+GameManager game;
+
 bool collided = false;
-int trial = 0;
-bool firstShot = true;
 bool start_dynamics = false;
 bool firstMouse = true;
 float lastX = width / 2.0f;
 float lastY = height / 2.0f;
+
+// bowling pins
+float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
+
+std::vector<glm::vec3> pin_positions = {
+    glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f,1.0f), glm::vec3(0.0f, 0.0f,-1.0f),
+    glm::vec3(sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(sqrt3 / 2.0f, 0.0f,1.5f),
+    glm::vec3(sqrt3 / 2.0f,0.0f ,-0.5f), glm::vec3(sqrt3 / 2.0f,  0.0f ,-1.5f),
+    glm::vec3(-sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(-sqrt3 / 2.0f,  0.0f ,-0.5f),
+    glm::vec3( -sqrt3,0.0f, 0.0f)
+};
+
+glm::vec3 pin_scale = glm::vec3(1.5, 1.5, 1.5);
+
 
 std::vector<Camera> theCameras = {
 	Camera(glm::vec3(0.0f, 10.0f, 2.0f),glm::vec3(0.0,0.25,-1.0),-90.0,-75.0, false),
@@ -53,13 +66,15 @@ Camera camera = theCameras[camIdx];
 MirrorFace* mirror;
 
 void windowResizeCallback(GLFWwindow* window, int width, int height);
-void processKeyInput(GLFWwindow* window, rigidObject& obj, btDiscreteDynamicsWorld* dWorld);
+void processKeyInput(GLFWwindow* window, rigidObject& obj, std::vector<rigidObject>& pins,btDiscreteDynamicsWorld* dWorld);
 void mouseCallback(GLFWwindow* window, double xposIn, double yposIn);
 bool DetectPinBallCollisions(btDiscreteDynamicsWorld* d_world, btRigidBody* groundObject, btRigidBody* ballObject);
 btRigidBody* addGround(btDynamicsWorld* d_world, Object* grd);
 int computeFallenPins(std::vector<rigidObject> PINS);
 void switchCameras();
-void dispScore();
+void resetBall(rigidObject& ball);
+void resetPins(std::vector<rigidObject>& PINS);
+
 
 #ifndef NDEBUG
 void APIENTRY glDebugOutput(GLenum source,
@@ -196,16 +211,7 @@ int main(int argc, char* argv[]){
 	ball.setVelocity(glm::vec3(10.0, 0.0, 0.0));
 	ball.getRigidBody()->setFriction(0.0);
 
-	// bowling pins
-	float sqrt3 = sqrtf(3.0f);  // Compute sqrt(3) once as a float
-
-	std::vector<glm::vec3> pin_positions = {
-		glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f,1.0f), glm::vec3(0.0f, 0.0f,-1.0f),
-		glm::vec3(sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(sqrt3 / 2.0f, 0.0f,1.5f),
-		glm::vec3(sqrt3 / 2.0f,0.0f ,-0.5f), glm::vec3(sqrt3 / 2.0f,  0.0f ,-1.5f),
-		glm::vec3(-sqrt3 / 2.0f,0.0f, 0.5f), glm::vec3(-sqrt3 / 2.0f,  0.0f ,-0.5f),
-		glm::vec3( -sqrt3,0.0f, 0.0f)
-	};
+	
 
 	GLuint pinTex = loadTexture(PATH_TO_TEXTURES "/bowling_pin.jpg");
 	Mesh pinMesh(PATH_TO_MESHES "/PinSmooth.obj",shader,pinTex);
@@ -213,7 +219,6 @@ int main(int argc, char* argv[]){
 	//Creating the objects
 	std::vector<rigidObject> PINS;
 
-	glm::vec3 pin_scale = glm::vec3(1.5, 1.5, 1.5);
 	for (auto& pos : pin_positions) {
 		rigidObject pin(pinMesh,0.2, true, F.getFresnelValue("zinc"), glm::scale(glm::translate(glm::mat4(1.0), 1.1f*pos), pin_scale), 0.5);
 		PINS.push_back(pin);
@@ -316,7 +321,7 @@ int main(int argc, char* argv[]){
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		processKeyInput(window, ball, dynamicsWorld);
+		processKeyInput(window, ball, PINS, dynamicsWorld);
 
 		glDepthFunc(GL_LEQUAL);
 		cubemapObj.draw(camera,l);
@@ -339,25 +344,16 @@ int main(int argc, char* argv[]){
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy
-		if (start_dynamics == true && endGame == false)
-		{	
+		if (start_dynamics == true && !game.hasGameEnded()){	
 			dynamicsWorld->stepSimulation(timeStep, maxSubSteps);
 		}
-		if (ball.hasDropped() && endGame == false) {
-			if (firstShot) { score[trial][0] = computeFallenPins(PINS); }
-			ball.resetRigidBody(model);
-			ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
-			if (!firstShot) {
-				score[trial][1] = computeFallenPins(PINS)- score[trial][0];
-				if (trial++ == 9) { endGame = true; dispScore();}
-				int i = 0;
-				for (auto& pin : PINS) {
-					pin.resetRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pin_positions[i++]), pin_scale));
-				}
-			}
+		if (ball.hasDropped() && !game.hasGameEnded()) {
+			game.updateGameState(PINS);
+			resetBall(ball);
+			if(game.hasStartedNewRound())
+				resetPins(PINS);
 			start_dynamics = false;
-			collided = false; 
-			firstShot = !firstShot;
+			collided = false;
 		}
 		if(!collided) collided = DetectPinBallCollisions(dynamicsWorld, ground_rigid_body, ball.getRigidBody());
 	}
@@ -383,7 +379,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height){
 	mirror->height = height;
 }
 
-void processKeyInput(GLFWwindow* window, rigidObject& ball, btDiscreteDynamicsWorld* dWorld) {
+void processKeyInput(GLFWwindow* window, rigidObject& ball,std::vector<rigidObject>& pins, btDiscreteDynamicsWorld* dWorld) {
 	//Close window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
@@ -411,18 +407,26 @@ void processKeyInput(GLFWwindow* window, rigidObject& ball, btDiscreteDynamicsWo
 
 	//Launch ball with enter 
 	if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
-		if (camIdx % theCameras.size() == 2) { // aiming camera
+		if (camIdx % theCameras.size() == 2 && !start_dynamics) { // aiming camera
 			glm::vec3 direction = glm::normalize(glm::vec3(camera.Front.x,0.0, camera.Front.z));
 			ball.setVelocity(10.0f*direction);
-			if(!endGame) start_dynamics = true;
+			if(!game.hasGameEnded()) start_dynamics = true;
 		}
+	}
+	
+	//reset game with R
+	if(glfwGetKey(window,GLFW_KEY_R) == GLFW_PRESS){
+		game.restartGame();
+		resetBall(ball);
+		resetPins(pins);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
 	//Switch cameras with TAB
 	if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
 	{
 		switchCameras();
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(200));
 	}
 
 	#ifndef NDEBUG
@@ -519,22 +523,17 @@ void switchCameras() {
 	camera = theCameras[(++camIdx) % theCameras.size()];
 }
 
-int computeFallenPins(std::vector<rigidObject> PINS) {
-	int res = 0;
-	for (rigidObject& pin : PINS) {
-		if (pin.isOnTheSide()) {
-			res++;
-		}
-	}
-	return res;
+void resetBall(rigidObject& ball){
+	glm::mat4 model = glm::mat4(1.0);
+	model = glm::scale(glm::translate(model, glm::vec3(-25.0, 0.0, 0.0)), glm::vec3(1.0));
+	ball.resetRigidBody(model);
+	ball.setVelocity(glm::vec3(0.0, 0.0, 0.0));
 }
 
-void dispScore() {
-	int totalScore = 0;
-	std::cout << "\nGame over! Here are the results: " << std::endl;
-	for (int i = 0; i < 10; i++) {
-		totalScore += score[i][0] + score[i][1];
-		std::cout << "Trial " << i + 1 << ": " << score[i][0] << " pins down, " << score[i][1] << " additional pins down" << std::endl;
+void resetPins(std::vector<rigidObject>& PINS){
+	int i = 0;
+	for (auto& pin : PINS) {
+		pin.resetRigidBody(glm::scale(glm::translate(glm::mat4(1.0), pin_positions[i++]), pin_scale));
 	}
-	std::cout << "Total score: " << totalScore << std::endl;
 }
+

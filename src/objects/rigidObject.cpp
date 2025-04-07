@@ -1,4 +1,4 @@
-﻿
+﻿#pragma once
 #include "object.h"
 
 #include <btBulletCollisionCommon.h>
@@ -123,7 +123,7 @@ public:
 		glm::vec3 initial_dimensions = mesh.getInitialDims();
 		float s = CHARACTERISTIC_LEN / MAX3(initial_dimensions.x, initial_dimensions.y, initial_dimensions.z);
 		setModel(glm::scale( nextModel, glm::vec3(s)));
-
+		on_the_side = false;
 	}
 
 	void setVelocity(glm::vec3 V) {
