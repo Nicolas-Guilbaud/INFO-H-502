@@ -283,3 +283,26 @@ partie sur le BRDF rédigé dans le rapport
 - écriture du rapport, screenshots des features basiques
 - écriture d'un README.md
 - création d'une vidéo mp4 et présentation des features principales
+
+## Réunion 10/04/25
+
+Text rendering: trop chronophage (problèmes de dépendances, etc.)
+
+Un problème de hitbox a été réglé pendant la réunion
+
+Le projet est quasi terminé (il reste juste le rapport, le Readme et une mini vidéo à faire)
+
+à mettre dans le rapport:
+
+- étoffer l'introduction
+- rajouter des images
+- rajouter:
+    - cubemap
+    - reflexion
+    - refraction
+    - mirroir (fbo)
+    - système de scoring dans la console
+
+(Enoncer les features implémentées et rajouter des screens)
+
+Ecriture du rapport ensemble mardi 15/04/25 de 18h à 20h
