@@ -15,6 +15,25 @@ git clone --recursive https://github.com/Nicolas-Guilbaud/INFO-H-502.git
 
 This project uses C-Make to build the binaries. Simply load the CMakeLists.txt then build as usual.
 
+# Controls
+
+The scene has 3 static cameras and a free camera (4th). 
+These can be rotated with the mouse.
+
+Some keys are used to switch between them, navigate with the free camera, launch the ball and restart the game.
+
+| Key   | Usage                                           |
+|-------|-------------------------------------------------|
+| TAB   | Change to the next camera                       |
+| A     | Move the free camera to the left                |
+| S     | Move the free camera backwards                  |
+| D     | Move the free camera to the right               |
+| W     | Move the free camera forwards                   |
+| LEFT  | Rotate the free camera to the left              |
+| RIGHT | Rotate the free camera to the Right             |
+| ENTER | Launch the ball. Works only on the first camera |
+| R     | Restart the game.                               |
+
 # Usefull links used during the project
 
 - [Bowling and pins object files](https://free3d.com/fr/3d-model/-bowling-ball-v1--953922.html)
