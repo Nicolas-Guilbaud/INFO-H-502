@@ -9,7 +9,6 @@ uniform mat4 M;
 uniform mat4 V; 
 uniform mat4 P; 
 
-//Which part do you need to compute here ?
 void main(){ 
     vec4 frag_coord = M*vec4(position, 1.0); 
     gl_Position = P*V*frag_coord;
