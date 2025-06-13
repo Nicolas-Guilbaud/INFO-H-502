@@ -340,7 +340,7 @@ int main(int argc, char* argv[]){
 
 		glfwSwapBuffers(window);
 
-		float fpsCount = (float)fps(now);
+		//float fpsCount = (float)fps(now);
 		// Step simulation
 		float timeStep = 1.0f / 60.0; // 60 FPS
 		int maxSubSteps = 5; // More substeps = better physics accuracy

@@ -18,9 +18,9 @@ public:
         btVector3 collisionPoint = cp.getPositionWorldOnA();  // or cp.getPositionWorldOnB()
         
         // Print collision details
-        std::cout << "\rCollision detected at position (" << collisionPoint.x() << ", "
-            << collisionPoint.y() << ", "
-            << collisionPoint.z() << ")" << std::flush;
+        //std::cout << "\rCollision detected at position (" << collisionPoint.x() << ", "
+        //    << collisionPoint.y() << ", "
+        //    << collisionPoint.z() << ")" << std::flush;
 		contactDetected = true;
         return 0; // Return the applied impulse or any custom value if needed
     }
